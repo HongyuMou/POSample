@@ -1,3 +1,25 @@
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from scipy.stats import norm
+from scipy.stats import linregress
+from scipy.stats import rankdata
+from sklearn.linear_model import LinearRegression
+import statsmodels.api as sm
+from scipy.stats import t
+from scipy import stats
+from sklearn.metrics import r2_score
+from matplotlib.lines import Line2D
+
+import os
+import warnings
+import sys
+
+import time
+start_time = time.time()
+
+
 def POSample(csv_file_path):
 
     # Specifically to suppress SettingWithCopyWarning:
@@ -1858,3 +1880,8 @@ def POSample(csv_file_path):
 
             # Print the table
             print(coefficients_table)
+
+end_time = time.time()
+
+elapsed_time_minutes = (end_time - start_time) / 60
+print(f"Elapsed time: {elapsed_time_minutes:.2f} minutes")
