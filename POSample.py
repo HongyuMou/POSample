@@ -844,6 +844,7 @@ def POSample(csv_file_path):
                 return pivot_results_Q2
 
             # Assuming all necessary variables are defined
+            GPA_cutoff = data['GPA_cutoff']
             pivot_results_Q2_bg0 = calculate_prob_Q2_above_GPA(data_bg0, unique_mapping_df, bin_edges, bin_edges_GPA, GPA_cutoff)
             pivot_results_Q2_bg1 = calculate_prob_Q2_above_GPA(data_bg1, unique_mapping_df, bin_edges, bin_edges_GPA, GPA_cutoff)
 
