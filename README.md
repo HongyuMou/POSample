@@ -9,6 +9,7 @@ To install the `POSample` package, first clone the repository from GitHub and th
 ```bash 
 git clone https://github.com/HongyuMou/POSample.git
 cd POSample
+git pull origin main # Update local repository to get the latest version
 pip install .
 ```
 
