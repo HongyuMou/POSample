@@ -826,8 +826,8 @@ def POSample(csv_file_path):
             # ### Directly compute the observed LHS: P(Q2>0|Y,GPA)
             # Use the empirical PMF directly from data: counts the number of occurrences where $Q2>0$ and divides it by the total number of occurrences in each $(GPA, Y)$ cell
 
-            def calculate_prob_Q2_above_GPA(data, unique_mapping_df, bin_edges, bin_edges_GPA, GPA_cutoff):
-                aboveGPA_data = data[data['gpa'] >= GPA_cutoff]
+            def calculate_prob_Q2_above_GPA(data, unique_mapping_df, bin_edges, bin_edges_GPA):
+                aboveGPA_data = data[data['gpa'] >= data['GPA_cutoff']]
                 aboveGPA_data = unique_mapping_df.merge(aboveGPA_data, on='Y_bin_index', how='left')
 
                 grouped_data = aboveGPA_data.groupby(['GPA_bin', 'Y_bin_index'])
@@ -844,9 +844,8 @@ def POSample(csv_file_path):
                 return pivot_results_Q2
 
             # Assuming all necessary variables are defined
-            GPA_cutoff = data['GPA_cutoff']
-            pivot_results_Q2_bg0 = calculate_prob_Q2_above_GPA(data_bg0, unique_mapping_df, bin_edges, bin_edges_GPA, GPA_cutoff)
-            pivot_results_Q2_bg1 = calculate_prob_Q2_above_GPA(data_bg1, unique_mapping_df, bin_edges, bin_edges_GPA, GPA_cutoff)
+            pivot_results_Q2_bg0 = calculate_prob_Q2_above_GPA(data_bg0, unique_mapping_df, bin_edges, bin_edges_GPA)
+            pivot_results_Q2_bg1 = calculate_prob_Q2_above_GPA(data_bg1, unique_mapping_df, bin_edges, bin_edges_GPA)
 
             # Save the results in new variables
             matrix_Q2_given_gpa_y_didata_bg0 = pivot_results_Q2_bg0
@@ -947,8 +946,8 @@ def POSample(csv_file_path):
 
             # ### Size Threshold version
 
-            def calculate_size_matrix(data, unique_mapping_df, bin_edges, bin_edges_GPA, GPA_cutoff):
-                aboveGPA_data = data[data['gpa'] >= GPA_cutoff]
+            def calculate_size_matrix(data, unique_mapping_df, bin_edges, bin_edges_GPA):
+                aboveGPA_data = data[data['gpa'] >= data['GPA_cutoff']]
                 aboveGPA_data = unique_mapping_df.merge(aboveGPA_data, on='Y_bin_index', how='left')
                 grouped_data = aboveGPA_data.groupby(['Y_bin_index', 'GPA_bin'])
 
@@ -958,8 +957,8 @@ def POSample(csv_file_path):
                 return count_matrix
 
             # Assuming bin_edges_GPA, bin_edges, GPA_cutoff, unique_mapping_df, data_bg0, and data_bg1 are defined
-            count_matrix_bg0 = calculate_size_matrix(data_bg0, unique_mapping_df, bin_edges, bin_edges_GPA, GPA_cutoff)
-            count_matrix_bg1 = calculate_size_matrix(data_bg1, unique_mapping_df, bin_edges, bin_edges_GPA, GPA_cutoff)
+            count_matrix_bg0 = calculate_size_matrix(data_bg0, unique_mapping_df, bin_edges, bin_edges_GPA)
+            count_matrix_bg1 = calculate_size_matrix(data_bg1, unique_mapping_df, bin_edges, bin_edges_GPA)
 
             # Plotting subfigures
             fig, axs = plt.subplots(1, 2, figsize=(20, 8))
@@ -1036,9 +1035,9 @@ def POSample(csv_file_path):
             # ### Q2>0 Sub-sample
 
 
-            def calculate_size_matrix_Q2(data_filtered, bin_edges, bin_edges_GPA, GPA_cutoff):
+            def calculate_size_matrix_Q2(data_filtered, bin_edges, bin_edges_GPA):
                 # Create a copy to avoid modifying the original DataFrame
-                aboveGPA_data_Q2 = data_filtered[data_filtered['gpa'] >= GPA_cutoff].copy()
+                aboveGPA_data_Q2 = data_filtered[data_filtered['gpa'] >= data_filtered['GPA_cutoff']].copy()
                 aboveGPA_data_Q2['Y_bin'] = pd.cut(aboveGPA_data_Q2['Y'], bins=bin_edges, include_lowest=True)
 
                 grouped_data_filtered = aboveGPA_data_Q2.groupby(['Y_bin', 'GPA_bin_Q2'])
@@ -1049,8 +1048,8 @@ def POSample(csv_file_path):
                 return count_matrix_Q2
 
             # Assuming bin_edges_GPA, bin_edges, GPA_cutoff, data_filtered_bg0, and data_filtered_bg1 are defined
-            count_matrix_Q2_bg0 = calculate_size_matrix_Q2(data_filtered_bg0, bin_edges, bin_edges_GPA, GPA_cutoff)
-            count_matrix_Q2_bg1 = calculate_size_matrix_Q2(data_filtered_bg1, bin_edges, bin_edges_GPA, GPA_cutoff)
+            count_matrix_Q2_bg0 = calculate_size_matrix_Q2(data_filtered_bg0, bin_edges, bin_edges_GPA)
+            count_matrix_Q2_bg1 = calculate_size_matrix_Q2(data_filtered_bg1, bin_edges, bin_edges_GPA)
 
             # Plotting subfigures
             fig, axs = plt.subplots(1, 2, figsize=(20, 8))
@@ -1090,8 +1089,8 @@ def POSample(csv_file_path):
             # In[33]:
 
 
-            def calculate_size_matrix_Q2(data_filtered, bin_edges, bin_edges_GPA, GPA_cutoff):
-                aboveGPA_data_Q2 = data_filtered[data_filtered['gpa'] >= GPA_cutoff].copy()
+            def calculate_size_matrix_Q2(data_filtered, bin_edges, bin_edges_GPA):
+                aboveGPA_data_Q2 = data_filtered[data_filtered['gpa'] >= data_filtered['GPA_cutoff']].copy()
                 aboveGPA_data_Q2['Y_bin'] = pd.cut(aboveGPA_data_Q2['Y'], bins=bin_edges, include_lowest=True)
                 grouped_data_filtered = aboveGPA_data_Q2.groupby(['Y_bin', 'GPA_bin_Q2'])
 
@@ -1101,8 +1100,8 @@ def POSample(csv_file_path):
                 return count_matrix_Q2
 
             # Assuming bin_edges_GPA, bin_edges, GPA_cutoff, data_filtered_bg0, and data_filtered_bg1 are defined
-            count_matrix_Q2_bg0 = calculate_size_matrix_Q2(data_filtered_bg0, bin_edges, bin_edges_GPA, GPA_cutoff)
-            count_matrix_Q2_bg1 = calculate_size_matrix_Q2(data_filtered_bg1, bin_edges, bin_edges_GPA, GPA_cutoff)
+            count_matrix_Q2_bg0 = calculate_size_matrix_Q2(data_filtered_bg0, bin_edges, bin_edges_GPA)
+            count_matrix_Q2_bg1 = calculate_size_matrix_Q2(data_filtered_bg1, bin_edges, bin_edges_GPA)
 
             # Plotting subfigures
             fig, axs = plt.subplots(1, 2, figsize=(20, 8))
@@ -1253,8 +1252,8 @@ def POSample(csv_file_path):
             # In[36]:
 
 
-            def calculate_conditional_prob_S(data_filtered, unique_mapping_df, bin_edges, bin_edges_GPA, GPA_cutoff):
-                aboveGPA_data_Q2 = data_filtered[data_filtered['gpa'] >= GPA_cutoff].copy()
+            def calculate_conditional_prob_S(data_filtered, unique_mapping_df, bin_edges, bin_edges_GPA):
+                aboveGPA_data_Q2 = data_filtered[data_filtered['gpa'] >= data_filtered['GPA_cutoff']].copy()
                 aboveGPA_data_Q2['Y_bin'] = pd.cut(aboveGPA_data_Q2['Y'], bins=bin_edges, include_lowest=True)
 
                 grouped_data_filtered = aboveGPA_data_Q2.groupby(['GPA_bin_Q2', 'Y_bin'])
@@ -1278,8 +1277,8 @@ def POSample(csv_file_path):
                 return pivot_results_S_Q2
 
             # Assuming bin_edges_GPA, bin_edges, GPA_cutoff, unique_mapping_df, data_filtered_bg0, and data_filtered_bg1 are defined
-            matrix_Sgt0_given_gpa_y_Q2_didata_bg0 = calculate_conditional_prob_S(data_filtered_bg0, unique_mapping_df, bin_edges, bin_edges_GPA, GPA_cutoff)
-            matrix_Sgt0_given_gpa_y_Q2_didata_bg1 = calculate_conditional_prob_S(data_filtered_bg1, unique_mapping_df, bin_edges, bin_edges_GPA, GPA_cutoff)
+            matrix_Sgt0_given_gpa_y_Q2_didata_bg0 = calculate_conditional_prob_S(data_filtered_bg0, unique_mapping_df, bin_edges, bin_edges_GPA)
+            matrix_Sgt0_given_gpa_y_Q2_didata_bg1 = calculate_conditional_prob_S(data_filtered_bg1, unique_mapping_df, bin_edges, bin_edges_GPA)
 
             # Plotting subfigures
             fig, axs = plt.subplots(1, 2, figsize=(20, 8))
@@ -1881,6 +1880,7 @@ def POSample(csv_file_path):
 
             # Print the table
             print(coefficients_table)
+
 
 end_time = time.time()
 
