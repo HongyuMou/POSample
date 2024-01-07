@@ -46,7 +46,5 @@ Contributions to the `POSample` package are welcome. Please submit pull requests
 ## License
 This project is licensed under the [MIT License](LICENSE).
 
-## Example Usage
-
 
 
