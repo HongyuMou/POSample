@@ -9,15 +9,21 @@ To install the `POSample` package, first clone the repository from GitHub and th
 ```bash 
 git clone https://github.com/HongyuMou/POSample.git
 cd POSample
-git pull origin main # Update local repository to get the latest version
 pip install .
 ```
 
+If the package was updated recently, you might need to reinstall it to get the latest version. Use:
+
+```bash 
+pip install --upgrade POSample
+```
+
 ## Usage
+
 Here's a simple example of how to use the `POSample` package:
 
 ```python
-from POSample import POSample
+from POSample.POSample import POSample
 
 # Replace 'path_to_csv' with the path to your CSV file
 csv_file_path = 'path_to_csv.csv'
