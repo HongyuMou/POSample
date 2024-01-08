@@ -7,7 +7,7 @@ The `POSample` package is designed for processing and analyzing data for the pro
 
 **Date:** Jan 7, 2024
 
-**Version:** 0.2 ([Github](https://github.com/HongyuMou/POSample))
+**Version:** 0.3 ([Github](https://github.com/HongyuMou/POSample))
 
 **Authors:** Benjamin U. Friedrich, Martin B. Hackmann, Hongyu Mou
 
