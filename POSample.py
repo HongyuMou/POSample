@@ -16,11 +16,19 @@ import os
 import warnings
 import sys
 
+
 import time
 start_time = time.time()
 
-
 def POSample(csv_file_path):
+    
+    # Extract the directory from the file_path
+    directory = os.path.dirname(csv_file_path)
+    # Create a path for the 'figures' subdirectory
+    figures_directory = os.path.join(directory, 'figures')
+    # Create the 'figures' directory if it doesn't exist
+    if not os.path.exists(figures_directory):
+        os.makedirs(figures_directory)
 
     # Specifically to suppress SettingWithCopyWarning:
     warnings.simplefilter(action='ignore', category=pd.core.common.SettingWithCopyWarning)
@@ -33,11 +41,16 @@ def POSample(csv_file_path):
     unique_programs = data_all['program_id'].unique()
 
     for program_id in unique_programs:
+            
+            print("-" * 40)
             print(f"Program: {program_id}")
 
             data = data_all[data_all['program_id'] == program_id]
 
-            data['plot_percentage_gpa_cutoff'] = (100 - data['percentage_above_cutoff_total']) / 100
+            # Calculate the percentage of students in the entire sample with GPA >= GPA_cutoff
+            percentage_above_cutoff_total = len(data[data['gpa'] >= data['GPA_cutoff']]) / len(data) * 100
+            
+            data['plot_percentage_gpa_cutoff'] = (100 - percentage_above_cutoff_total) / 100
 
             def custom_min_max_scaling(percentiles, min_value, max_value):
                 """Apply custom Min-Max scaling."""
@@ -78,7 +91,7 @@ def POSample(csv_file_path):
             # Add the 'Percentile_Ranking_Q2' column to the DataFrame
             data['percentile_S_addimitQ2'] = percentile_ranking_Q2
 
-            filtered_data = data[data['Q2'] > 0] 
+            filtered_data = data[data['Applied_Q2'] == 1] 
             filtered_data = filtered_data.copy()
 
             # Create custom bin edges for GPA
@@ -120,7 +133,7 @@ def POSample(csv_file_path):
 
 
             data['S_cutoff'] = 0
-            plot_percentage_S_cutoff_appliedQ2 = len(data[(data['S']<= 0) & (data['Q2'] > 0)]) / len(data[data['Q2'] > 0])
+            plot_percentage_S_cutoff_appliedQ2 = len(data[(data['S']<= 0) & (data['Applied_Q2']== 1)]) / len(data[data['Applied_Q2'] == 1])
 
 
             # ## Equation (1): OLS Regression for rows where GPA >= GPA_cutoff
@@ -224,7 +237,8 @@ def POSample(csv_file_path):
             plt.title('OLS Regression Lines for Q1 Admitted and Not Admitted Groups Across Backgrounds (Equation 1)')
             plt.legend()
             plt.grid(True)
-            plt.show()
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_OLS_eq1.png'))
+            plt.close()
             
 
             # Equation (2)
@@ -326,7 +340,8 @@ def POSample(csv_file_path):
             plt.title('OLS Regression Lines for Q2 Admitted and Not Admitted Group Across Backgrounds (Equation 2)')
             plt.legend()
             plt.grid(True)
-            plt.show()
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_OLS_eq2.png'))
+            plt.close()
 
 
             ## Check if the residuals from equation (1) and (2) look normal
@@ -389,7 +404,8 @@ def POSample(csv_file_path):
 
             # Display the plots
             plt.tight_layout()
-            plt.show()
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_residuals_normality.png'))
+            plt.close()
 
             # Custom bin edges
             bin_edges_GPA = [0] + [1/num_bins + i * ((1-1/num_bins) - 1/num_bins) / (num_bins - 2) for i in range(num_bins - 1)] + [1]
@@ -516,7 +532,8 @@ def POSample(csv_file_path):
             axs[1].tick_params(top=True, bottom=False, labeltop=True, labelbottom=False)
 
             plt.tight_layout()
-            plt.show()
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P[S | GPA, Q2 > 0,b]_PMF.png'))
+            plt.close()
 
 
             # #### Calculate P[Y in y_bin | GPA(%) in gpa_bin, Q2>0, s(%) in S_bin]
@@ -720,8 +737,9 @@ def POSample(csv_file_path):
 
             # # Add color bar
             # fig.colorbar(cax1, ax=axs, orientation='vertical')
-
-            plt.show()    
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_Modeled P(Y | Q2, GPA,b).png'))
+            plt.close()
+            
 
 
             # ## P(Y | GPA)
@@ -779,7 +797,8 @@ def POSample(csv_file_path):
                 ax.grid(True, which='both', linestyle='--', linewidth=0.5, color='k')
 
             plt.tight_layout()
-            plt.show()
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_Modeled P(Y | GPA,b).png'))
+            plt.close()
 
 
             # ## P(Q2 | GPA): probability that a student applies to Q2 given their GPA
@@ -820,7 +839,8 @@ def POSample(csv_file_path):
                 ax.set_ylim(0, max_prob + 0.05)
 
             plt.tight_layout()
-            plt.show()
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P(Q2 | GPA,b).png'))
+            plt.close()
 
 
             # ### Directly compute the observed LHS: P(Q2>0|Y,GPA)
@@ -882,7 +902,8 @@ def POSample(csv_file_path):
                 ax.grid(True, which='both', linestyle='--', linewidth=0.5, color='k')
 
             plt.tight_layout()
-            plt.show()
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P(Q2 | GPA, Y)_localapprox.png'))
+            plt.close()
 
 
             # ### Model predicted version
@@ -941,7 +962,8 @@ def POSample(csv_file_path):
 
             # Adjust layout
             plt.tight_layout()
-            plt.show()
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P(Q2 | GPA, Y)_extrapo.png'))
+            plt.close()
 
 
             # ### Size Threshold version
@@ -989,16 +1011,48 @@ def POSample(csv_file_path):
                 ax.grid(True, which='both', linestyle='--', linewidth=0.5, color='k')
 
                 ax.set_xlabel('GPA(%) Bin')
-                ax.set_ylabel('Y Bin Index')
+                ax.set_ylabel('Y Bin')
 
             plt.tight_layout()
-            plt.show()
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_size_gpa_gtcutoff_y.png'))
+            plt.close()
+
+            # Size 10
+            fig, axs = plt.subplots(1, 2, figsize=(20, 8))
+
+            for ax, matrix, title in zip(axs, [count_matrix_bg0, count_matrix_bg1], ['B=0', 'B=1']):
+                cax = ax.imshow(matrix, cmap='YlGnBu', aspect='auto')
+                ax.set_title(f'Size of (GPA(%), Y) Cell with Threshold 10 -- {title}')
+                ax.xaxis.tick_top()
+                ax.xaxis.set_label_position('top')
+                ax.tick_params(top=True, bottom=False, labeltop=True, labelbottom=False)
+
+                for (i, j), val in np.ndenumerate(matrix.values):
+                    if val < 10:
+                        ax.text(j, i, '<10', ha='center', va='center', color='red', fontsize=8)
+                    else:
+                        ax.text(j, i, f'{val:.0f}', ha='center', va='center', color='black', fontsize=8)
+
+                x_bin_labels = [f'{100*edge:.0f}%' for edge in bin_edges_GPA]
+                x_ticks = np.arange(-0.5, len(x_bin_labels) - 0.5, 1)
+                ax.set_xticks(x_ticks)
+                ax.set_xticklabels(x_bin_labels, rotation=45)
+
+                y_bin_labels = [f'{edge:.2f}' for edge in bin_edges]
+                y_ticks = np.arange(-0.5, len(y_bin_labels) - 0.5, 1)
+                ax.set_yticks(y_ticks)
+                ax.set_yticklabels(y_bin_labels)
+                ax.grid(True, which='both', linestyle='--', linewidth=0.5, color='k')
+
+                ax.set_xlabel('GPA(%) Bin')
+                ax.set_ylabel('Y Bin')
+
+            plt.tight_layout()
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_size_gpa_y_10.png'))
+            plt.close()
 
 
-            # In[30]:
-
-
-            # Plotting subfigures
+            # Size 50
             fig, axs = plt.subplots(1, 2, figsize=(20, 8))
 
             for ax, matrix, title in zip(axs, [count_matrix_bg0, count_matrix_bg1], ['B=0', 'B=1']):
@@ -1026,10 +1080,11 @@ def POSample(csv_file_path):
                 ax.grid(True, which='both', linestyle='--', linewidth=0.5, color='k')
 
                 ax.set_xlabel('GPA(%) Bin')
-                ax.set_ylabel('Y Bin Index')
+                ax.set_ylabel('Y Bin')
 
             plt.tight_layout()
-            plt.show()
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_size_gpa_y_50.png'))
+            plt.close()
 
 
             # ### Q2>0 Sub-sample
@@ -1080,10 +1135,11 @@ def POSample(csv_file_path):
                 ax.grid(True, which='both', linestyle='--', linewidth=0.5, color='k')
 
                 ax.set_xlabel('GPA(%) Bin')
-                ax.set_ylabel('Y Bin Index')
+                ax.set_ylabel('Y Bin')
 
             plt.tight_layout()
-            plt.show()
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_size_gpa_gtcutoff_y_Q2.png'))
+            plt.close()
 
 
             # In[33]:
@@ -1109,7 +1165,7 @@ def POSample(csv_file_path):
             # Common settings for both plots
             for ax, matrix, title in zip(axs, [count_matrix_Q2_bg0, count_matrix_Q2_bg1], ['B=0', 'B=1']):
                 cax = ax.imshow(matrix, cmap='YlGnBu', aspect='auto')
-                ax.set_title(f'Size of (GPA(%), Y) Cell with Threshold 100 -- {title}')
+                ax.set_title(f'Size of (GPA(%), Y) Cell with Threshold 100 for Q2>0 & GPA > GPA_cutoff -- {title}')
                 ax.xaxis.tick_top()
                 ax.xaxis.set_label_position('top')
                 ax.tick_params(top=True, bottom=False, labeltop=True, labelbottom=False)
@@ -1132,10 +1188,11 @@ def POSample(csv_file_path):
                 ax.grid(True, which='both', linestyle='--', linewidth=0.5, color='k')
 
                 ax.set_xlabel('GPA(%) Bin')
-                ax.set_ylabel('Y Bin Index')
+                ax.set_ylabel('Y Bin')
 
-            plt.tight_layout()
-            plt.show()
+            plt.tight_layout
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_size_gpa_y_100_Q2.png'))
+            plt.close()
 
 
             # #### Use values in matrix_Q2_given_gpa_y if size < size threshold; Use values in matrix_Q2_given_gpa_y_didata if size >= size threshold
@@ -1184,10 +1241,11 @@ def POSample(csv_file_path):
                 ax.grid(True, which='both', linestyle='--', linewidth=0.5, color='k')
 
                 ax.set_xlabel('GPA(%) Bin')
-                ax.set_ylabel('Y Bin Index')
+                ax.set_ylabel('Y Bin')
 
             plt.tight_layout()
-            plt.show()
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P(Q2 | GPA, Y)_Size10.png'))
+            plt.close()
 
 
             # In[35]:
@@ -1237,10 +1295,11 @@ def POSample(csv_file_path):
                 ax.grid(True, which='both', linestyle='--', linewidth=0.5, color='k')
 
                 ax.set_xlabel('GPA(%) Bin')
-                ax.set_ylabel('Y Bin Index')
+                ax.set_ylabel('Y Bin')
 
             plt.tight_layout()
-            plt.show()
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P(Q2 | GPA, Y)_Size50.png'))
+            plt.close()
 
 
             # ### $P(S > 0 \mid \text{GPA(%), Y, Q2}>0)$
@@ -1313,10 +1372,11 @@ def POSample(csv_file_path):
                 ax.grid(True, which='both', linestyle='--', linewidth=0.5, color='k')
 
                 ax.set_xlabel('GPA(%) Bin')
-                ax.set_ylabel('Y Bin Index')
+                ax.set_ylabel('Y Bin')
 
             plt.tight_layout()
-            plt.show()
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P(S > 0 | GPA, Y, Q2)_localapprox.png'))
+            plt.close()
 
 
             # #### 3. From Model using Bayes Rule 
@@ -1374,7 +1434,7 @@ def POSample(csv_file_path):
                 ax.grid(True, which='both', linestyle='--', linewidth=0.5, color='k')
 
                 ax.set_xlabel('GPA(%) Bin')
-                ax.set_ylabel('Y Bin Index')
+                ax.set_ylabel('Y Bin')
 
             # Calculate probabilities for background = 0 and background = 1
             matrix_p_y_gpa_Sgt0_Q2_bg0 = calculate_probabilities(data_bg0, bin_edges, sigma_2)
@@ -1390,7 +1450,8 @@ def POSample(csv_file_path):
             plot_heatmap(matrix_p_y_gpa_Sgt0_Q2_bg1, axs[1], 'P(Y | GPA, S > 0, Q2 > 0) from Extrapolation -- B=1', bin_edges, bin_edges_GPA)
 
             plt.tight_layout()
-            plt.show()
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P(Y | Q2, GPA,S>0)_model.png'))
+            plt.close()
 
 
             # In[41]:
@@ -1501,7 +1562,8 @@ def POSample(csv_file_path):
             axs[1].set_ylim(0, max_probability)  # Set y-axis limit
 
             plt.tight_layout()
-            plt.show()
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P(S > 0 | GPA, Q2)_LPM.png'))
+            plt.close()
 
 
             matrix_p_s_gt0_gpa_Q2_bg0 = pd.DataFrame([grouped_data_bg0['Estimated_Probability'].values] * num_y_bins)
@@ -1559,7 +1621,7 @@ def POSample(csv_file_path):
                 ax.grid(True, which='both', linestyle='--', linewidth=0.5, color='k')
 
                 ax.set_xlabel('GPA(%) Bin')
-                ax.set_ylabel('Y Bin Index')
+                ax.set_ylabel('Y Bin')
 
             # Create subplots
             fig, axs = plt.subplots(1, 2, figsize=(20, 8))
@@ -1571,7 +1633,8 @@ def POSample(csv_file_path):
             plot_heatmap(computed_matrix_bg1, axs[1], 'P(S > 0 | GPA(%), Y, Q2>0) from Extrapolation -- B=1', bin_edges, bin_edges_GPA)
 
             plt.tight_layout()
-            plt.show()
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P(S > 0 | GPA, Y, Q2)_extrapo.png'))
+            plt.close()
 
             # Save computed matrices under new names
             matrix_Sgt0_given_gpa_y_Q2_bg0 = computed_matrix_bg0
@@ -1625,7 +1688,7 @@ def POSample(csv_file_path):
                 ax.grid(True, which='both', linestyle='--', linewidth=0.5, color='k')
 
                 ax.set_xlabel('GPA(%) Bin')
-                ax.set_ylabel('Y Bin Index')
+                ax.set_ylabel('Y Bin')
 
 
             # Create subplots
@@ -1638,7 +1701,8 @@ def POSample(csv_file_path):
             plot_heatmap(matrix_Sgt0_given_gpa_y_Q2_Size100_bg1, axs[1], 'P(S > 0 | GPA(%), Y, Q2>0, B=1) with Size Threshold 100', bin_edges, bin_edges_GPA)
 
             plt.tight_layout()
-            plt.show()
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P(S > 0 | GPA, Y, Q2)_Size100.png'))
+            plt.close()
 
 
             # ## $P(S>0, Q 2 >0 \mid G P A,Y)$
@@ -1686,7 +1750,7 @@ def POSample(csv_file_path):
                 ax.grid(True, which='both', linestyle='--', linewidth=0.5, color='k')
 
                 ax.set_xlabel('GPA(%) Bin')
-                ax.set_ylabel('Y Bin Index')
+                ax.set_ylabel('Y Bin')
 
             # Create subplots
             fig, axs = plt.subplots(1, 2, figsize=(20, 8))
@@ -1698,7 +1762,8 @@ def POSample(csv_file_path):
             plot_heatmap(matrix_Sgt0_Q2_given_gpa_y_didata_bg1, axs[1], 'P(S > 0, Q2 > 0 | GPA, Y) from Local Approximation -- B=1', bin_edges, bin_edges_GPA)
 
             plt.tight_layout()
-            plt.show()
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P(S > 0, Q2 > 0 | GPA, Y)_localapprox.png'))
+            plt.close()
 
 
             # ### (3) Model Predicted  P(S>0, Q 2 >0 | G P A,Y)
@@ -1740,9 +1805,7 @@ def POSample(csv_file_path):
                 ax.grid(True, which='both', linestyle='--', linewidth=0.5, color='k')
 
                 ax.set_xlabel('GPA(%) Bin')
-                ax.set_ylabel('Y Bin Index')
-
-            # Create subplots
+                ax.set_ylabel('Y Bin')
             fig, axs = plt.subplots(1, 2, figsize=(20, 8))
 
             # Plot for background = 0
@@ -1752,7 +1815,8 @@ def POSample(csv_file_path):
             plot_heatmap(matrix_Sgt0_Q2_given_gpa_y_bg1, axs[1], 'P(S > 0, Q2 > 0 | GPA, Y) from Extrapolation -- B=1', bin_edges, bin_edges_GPA)
 
             plt.tight_layout()
-            plt.show()
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P(S > 0, Q2 > 0 | GPA, Y)_extrapo.png'))
+            plt.close()
 
 
             # ### (4) P(S>0, Q 2 >0 | G P A,Y)_Size10
@@ -1794,7 +1858,7 @@ def POSample(csv_file_path):
                 ax.grid(True, which='both', linestyle='--', linewidth=0.5, color='k')
 
                 ax.set_xlabel('GPA(%) Bin')
-                ax.set_ylabel('Y Bin Index')
+                ax.set_ylabel('Y Bin')
 
             # Create subplots
             fig, axs = plt.subplots(1, 2, figsize=(20, 8))
@@ -1806,7 +1870,8 @@ def POSample(csv_file_path):
             plot_heatmap(matrix_Sgt0_Q2_given_gpa_y_Size10_bg1, axs[1], 'P(S > 0, Q2 > 0 | GPA, Y): Size 100 for P(S > 0 | GPA, Y, Q2 > 0); Size 10 for P(Q2 > 0 | GPA, Y) -- B=1', bin_edges, bin_edges_GPA)
 
             plt.tight_layout()
-            plt.show()
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P(S > 0, Q2 > 0 | GPA, Y)_Size10.png'))
+            plt.close()
 
 
             # ### (5) P(S>0, Q 2 >0 | G P A,Y)_Size50
@@ -1848,7 +1913,7 @@ def POSample(csv_file_path):
                 ax.grid(True, which='both', linestyle='--', linewidth=0.5, color='k')
 
                 ax.set_xlabel('GPA(%) Bin')
-                ax.set_ylabel('Y Bin Index')
+                ax.set_ylabel('Y Bin')
 
             # Create subplots
             fig, axs = plt.subplots(1, 2, figsize=(20, 8))
@@ -1860,7 +1925,8 @@ def POSample(csv_file_path):
             plot_heatmap(matrix_Sgt0_Q2_given_gpa_y_Size50_bg1, axs[1], 'P(S > 0, Q2 > 0 | GPA, Y): Size 100 for P(S > 0 | GPA, Y, Q2 > 0); Size 50 for P(Q2 > 0 | GPA, Y) -- B=1', bin_edges, bin_edges_GPA)
 
             plt.tight_layout()
-            plt.show()
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P(S > 0, Q2 > 0 | GPA, Y)_Size50.png'))
+            plt.close()
 
             # Extract coefficients
             coefficients_eq1 = eq1_admitted_model.params
@@ -1880,8 +1946,7 @@ def POSample(csv_file_path):
 
             # Print the table
             print(coefficients_table)
-
-
+            
 end_time = time.time()
 
 elapsed_time_minutes = (end_time - start_time) / 60
