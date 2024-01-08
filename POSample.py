@@ -24,11 +24,19 @@ def POSample(csv_file_path):
     
     # Extract the directory from the file_path
     directory = os.path.dirname(csv_file_path)
+    
     # Create a path for the 'figures' subdirectory
     figures_directory = os.path.join(directory, 'figures')
     # Create the 'figures' directory if it doesn't exist
     if not os.path.exists(figures_directory):
         os.makedirs(figures_directory)
+        
+    # Create a path for the 'tables' subdirectory
+    tables_directory = os.path.join(directory, 'tables')
+    # Create the 'tables' directory if it doesn't exist
+    if not os.path.exists(tables_directory):
+        os.makedirs(tables_directory)
+    
 
     # Specifically to suppress SettingWithCopyWarning:
     warnings.simplefilter(action='ignore', category=pd.core.common.SettingWithCopyWarning)
@@ -41,7 +49,7 @@ def POSample(csv_file_path):
     unique_programs = data_all['program_id'].unique()
 
     for program_id in unique_programs:
-            
+        
             print("-" * 40)
             print(f"Program: {program_id}")
 
@@ -152,9 +160,9 @@ def POSample(csv_file_path):
             coefficients_eq1_admitted = eq1_admitted_model.params
             p_values_eq1_admitted = eq1_admitted_model.pvalues
             equation1 = f"Y hat = {coefficients_eq1_admitted[0]:.2f} "
-            for i in range(1, len(coefficients_eq1_admitted)):
-                equation1 += f"+ ({coefficients_eq1_admitted[i]:.2f})*X{i} "
-                equation1 += f"(p={p_values_eq1_admitted[i]:.2g}) "
+            for variable in coefficients_eq1_admitted.index[1:]:
+                equation1 += f"+ ({coefficients_eq1_admitted[variable]:.2f})*{variable} "
+                equation1 += f"(p={p_values_eq1_admitted[variable]:.2g}) "
             print("\nEquation (1) for the admitted:")
             print(equation1)
 
@@ -163,8 +171,7 @@ def POSample(csv_file_path):
             data['residuals_admitted_Q1'] = data['Y'][data['percentile_GPA_applyQ1'] >= data['plot_percentage_gpa_cutoff']] - data['Y_GPA_predicted'][data['percentile_GPA_applyQ1'] >= data['plot_percentage_gpa_cutoff']]
             # Standard deviation: sigma_1 for conditional probability
             sigma_1 = np.std(data['residuals_admitted_Q1'] , ddof=3)
-            print("\nStd of Equation (1) for the admitted:")
-            print(sigma_1)
+            print(f"\nStd of Equation (1) for the admitted: {sigma_1:.2f}")
 
 
             # ## Equation (1): OLS Regression for rows where GPA < GPA_cutoff
@@ -182,9 +189,9 @@ def POSample(csv_file_path):
             coefficients_eq1_notadmitted = eq1_notadmitted_model.params
             p_values_eq1_notadmitted = eq1_notadmitted_model.pvalues
             equation1 = f"Y hat = {coefficients_eq1_notadmitted[0]:.2f} "
-            for i in range(1, len(coefficients_eq1_notadmitted)):
-                equation1 += f"+ ({coefficients_eq1_notadmitted[i]:.2f})*X{i} "
-                equation1 += f"(p={p_values_eq1_notadmitted[i]:.2g}) "
+            for variable in coefficients_eq1_notadmitted.index[1:]:
+                equation1 += f"+ ({coefficients_eq1_notadmitted[variable]:.2f})*{variable} "
+                equation1 += f"(p={p_values_eq1_notadmitted[variable]:.2g}) "
             print("\nEquation (1) for the not admitted:")
             print(equation1)
 
@@ -198,8 +205,7 @@ def POSample(csv_file_path):
                                                - data['Y_GPA_predicted_notadmitted'][data['percentile_GPA_applyQ1'] < data['GPA_cutoff']]
             # Standard deviation: sigma_1 for conditional probability
             sigma_1_notadmitted = np.std(data['residuals_notadmitted_Q1'] , ddof=3)
-            print("\nStd of Equation (1) for the not admitted:")
-            print(sigma_1_notadmitted)
+            print(f"\nStd of Equation (1) for the not admitted: {sigma_1_notadmitted:.2f}")
 
 
 
@@ -257,19 +263,20 @@ def POSample(csv_file_path):
             coefficients_eq2_admitted = eq2_admitted_model.params
             p_values_eq2_admitted = eq2_admitted_model.pvalues
             equation2 = f"Y = {coefficients_eq2_admitted[0]:.2f} "
-            for i in range(1, len(coefficients_eq2_admitted)):
-                equation2 += f"+ ({coefficients_eq2_admitted[i]:.2f})*X{i} "
-                equation2 += f"(p={p_values_eq2_admitted[i]:.2g}) "
+            for variable in coefficients_eq2_admitted.index[1:]:
+                equation2 += f"+ ({coefficients_eq2_admitted[variable]:.2f})*{variable} "
+                equation2 += f"(p={p_values_eq2_admitted[variable]:.2g}) "
             print("\nEquation (2) for the admitted:")
             print(equation2)
+            
+            
 
             # Calculate Y_S for all percentile_S_applyQ2 values
             data['Y_s_GPA_Q2_predicted'] = eq2_admitted_model.params[0] + eq2_admitted_model.params[1] * data['percentile_GPA_applyQ1'] + eq2_admitted_model.params[2] * data['percentile_S_applyQ2'] + eq2_admitted_model.params[3] * data['background']
             data['residuals_admitted_Q2'] = data['Y'][data['percentile_S_applyQ2'] >= plot_percentage_S_cutoff_appliedQ2] - data['Y_s_GPA_Q2_predicted'][data['percentile_S_applyQ2'] > plot_percentage_S_cutoff_appliedQ2]
             # Standard deviation: sigma_2 for conditional probability
             sigma_2 = np.std(data['residuals_admitted_Q2'] , ddof=4)
-            print("\nStd of Equation (2) for the admitted:")
-            print(sigma_2)
+            print(f"\nStd of Equation (2) for the admitted: {sigma_2:.2f}")
 
 
             # not admitted:
@@ -285,9 +292,9 @@ def POSample(csv_file_path):
             coefficients_eq2_notadmitted = eq2_notadmitted_model.params
             p_values_eq2_notadmitted = eq2_notadmitted_model.pvalues
             equation2 = f"Y = {coefficients_eq2_notadmitted[0]:.2f} "
-            for i in range(1, len(coefficients_eq2_notadmitted)):
-                equation2 += f"+ ({coefficients_eq2_notadmitted[i]:.2f})*X{i} "
-                equation2 += f"(p={p_values_eq2_notadmitted[i]:.2g}) "
+            for variable in coefficients_eq2_notadmitted.index[1:]:
+                equation2 += f"+ ({coefficients_eq2_notadmitted[variable]:.2f})*{variable} "
+                equation2 += f"(p={p_values_eq2_notadmitted[variable]:.2g}) "
             print("\nEquation (2) for the not admitted:")
             print(equation2)
 
@@ -295,8 +302,7 @@ def POSample(csv_file_path):
             data['Y_s_GPA_Q2_predicted_notadmitted'] = eq2_notadmitted_model.params[0] + eq2_notadmitted_model.params[1] * data['percentile_GPA_applyQ1'] + eq2_notadmitted_model.params[2] * data['percentile_S_applyQ2'] + eq2_notadmitted_model.params[3] * data['background']
             data['residuals_notadmitted_Q2'] = data['Y'][data['percentile_S_applyQ2'] <= plot_percentage_S_cutoff_appliedQ2] - data['Y_s_GPA_Q2_predicted'][data['percentile_S_applyQ2'] <= plot_percentage_S_cutoff_appliedQ2]
             sigma_2_notadmitted = np.std(data['residuals_notadmitted_Q2'] , ddof=4)
-            print("\nStd of Equation (2) for the not admitted:")
-            print(sigma_2_notadmitted)
+            print(f"\nStd of Equation (2) for the not admitted: {sigma_2_notadmitted:.2f}")
 
 
 
@@ -1943,11 +1949,12 @@ def POSample(csv_file_path):
                 'Equation (3): Background 1': coefficients_eq3_bg1,
                 'Equation (3): Pool Background': coefficients_eq3
             }).round(2)
-
-            # Print the table
-            print(coefficients_table)
             
+            excel_file_path = os.path.join(tables_directory, f'Program_{program_id}_coefficients_table.xlsx')
+            coefficients_table.to_excel(excel_file_path)
+            print(f"Coefficients Table saved to {excel_file_path}")
+
 end_time = time.time()
 
 elapsed_time_minutes = (end_time - start_time) / 60
-print(f"Elapsed time: {elapsed_time_minutes:.2f} minutes")
+print(f"Elapsed time: {elapsed_time_minutes:.2f} minutes")            
