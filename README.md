@@ -28,14 +28,14 @@ pip install --upgrade POSample
 
 ## Usage
 
-Here's a simple example of how to use the `POSample` package, which works either in terminal or in Jupyter environment:
+Here's a simple example of how to use the `POSample` package, which works in Jupyter environment:
 
 ```python
 from POSample import POSample
 
 # Replace 'path_to_csv' with the path to your CSV file
 csv_file_path = 'path_to_csv.csv'
-POSample(csv_file_path)
+POSample.POSample(csv_file_path)
 ```
 
 ## Dependencies
