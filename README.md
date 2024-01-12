@@ -37,7 +37,7 @@ POSample(csv_file_path)
 - pandas: version 1.3.4
 - seaborn: version 0.11.2
 - matplotlib: version 3.4.3
-- scipy: version 1.11.4
+- scipy: version 1.10.1
 - scikit-learn: version 0.24.2
 - statsmodels: version 0.13.5
 - openpyxl: version 3.0.9
