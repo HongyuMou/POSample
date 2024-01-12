@@ -34,7 +34,7 @@ csv_file_path = 'path_to_csv.csv'
 POSample(csv_file_path)
 ```
 
-Example code in a Jupyter ipynb file after installation:
+Example code:
 
 ```python
 from POSample import POSample
