@@ -5,9 +5,9 @@ The `POSample` package is designed for processing and analyzing data for the pro
 
 ------
 
-**Date:** Jan 7, 2024
+**Date:** Jan 11, 2024
 
-**Version:** 0.3 ([Github](https://github.com/HongyuMou/POSample))
+**Version:** 0.4 ([Github](https://github.com/HongyuMou/POSample))
 
 **Authors:** Benjamin U. Friedrich, Martin B. Hackmann, Hongyu Mou
 
@@ -20,22 +20,16 @@ cd POSample
 pip install .
 ```
 
-If the package was updated recently, you might need to reinstall it to get the latest version. Use:
-
-```bash 
-pip install --upgrade POSample
-```
-
 ## Usage
 
-Here's a simple example of how to use the `POSample` package, which works in Jupyter environment:
+Here's a simple example of how to use the `POSample` package, which works either in terminal or in Jupyter environment:
 
 ```python
 from POSample import POSample
 
 # Replace 'path_to_csv' with the path to your CSV file
 csv_file_path = 'path_to_csv.csv'
-POSample.POSample(csv_file_path)
+POSample(csv_file_path)
 ```
 
 ## Dependencies
@@ -43,9 +37,11 @@ POSample.POSample(csv_file_path)
 - pandas: version 1.3.4
 - seaborn: version 0.11.2
 - matplotlib: version 3.4.3
-- scipy: version 1.10.1
+- scipy: version 1.11.4
 - scikit-learn: version 0.24.2
 - statsmodels: version 0.13.5
+- openpyxl: version 3.0.9
+- setuptools: version 58.0.4
 
 Ensure these are installed in your environment to use `POSample`.
 

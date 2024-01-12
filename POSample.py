@@ -11,44 +11,53 @@ from scipy.stats import t
 from scipy import stats
 from sklearn.metrics import r2_score
 from matplotlib.lines import Line2D
+import openpyxl
 
 import os
 import warnings
 import sys
 
-
 import time
 start_time = time.time()
+
 
 def POSample(csv_file_path):
     
     # Extract the directory from the file_path
     directory = os.path.dirname(csv_file_path)
     
-    # Create a path for the 'figures' subdirectory
-    figures_directory = os.path.join(directory, 'figures')
-    # Create the 'figures' directory if it doesn't exist
-    if not os.path.exists(figures_directory):
-        os.makedirs(figures_directory)
-        
-    # Create a path for the 'tables' subdirectory
-    tables_directory = os.path.join(directory, 'tables')
-    # Create the 'tables' directory if it doesn't exist
-    if not os.path.exists(tables_directory):
-        os.makedirs(tables_directory)
+    # Define a path for the output text file
+    output_file_path = os.path.join(directory, 'POSample_output_logfile.txt')
     
+    # Open the output file and redirect stdout
+    original_stdout = sys.stdout  # Save a reference to the original standard output
+    with open(output_file_path, 'w') as file:
+        sys.stdout = file
+        
+        # Create a path for the 'figures' subdirectory
+        figures_directory = os.path.join(directory, 'figures')
+        # Create the 'figures' directory if it doesn't exist
+        if not os.path.exists(figures_directory):
+            os.makedirs(figures_directory)
 
-    # Specifically to suppress SettingWithCopyWarning:
-    warnings.simplefilter(action='ignore', category=pd.core.common.SettingWithCopyWarning)
+        # Create a path for the 'tables' subdirectory
+        tables_directory = os.path.join(directory, 'tables')
+        # Create the 'tables' directory if it doesn't exist
+        if not os.path.exists(tables_directory):
+            os.makedirs(tables_directory)
 
-    # Read data from CSV
-    data_all = pd.read_csv(csv_file_path)
-    data_all_available = data_all[data_all['Available'] == 1]
 
-    # Modify here to iterate over each unique program
-    unique_programs = data_all['program_id'].unique()
+        # Specifically to suppress SettingWithCopyWarning:
+        warnings.simplefilter(action='ignore', category=pd.core.common.SettingWithCopyWarning)
 
-    for program_id in unique_programs:
+        # Read data from CSV
+        data_all = pd.read_csv(csv_file_path)
+        data_all_available = data_all[data_all['Available'] == 1]
+
+        # Modify here to iterate over each unique program
+        unique_programs = data_all['program_id'].unique()
+
+        for program_id in unique_programs:
         
             print("-" * 40)
             print(f"Program: {program_id}")
@@ -208,7 +217,6 @@ def POSample(csv_file_path):
             print(f"\nStd of Equation (1) for the not admitted: {sigma_1_notadmitted:.2f}")
 
 
-
             # Plot: Define ranges for admitted and not admitted groups
             X_plot_range_admitted = np.linspace(eq1_admitted_X['percentile_GPA_applyQ1'].min(), eq1_admitted_X['percentile_GPA_applyQ1'].max(), 100)
             X_plot_range_notadmitted = np.linspace(eq1_notadmitted_X['percentile_GPA_applyQ1'].min(), eq1_notadmitted_X['percentile_GPA_applyQ1'].max(), 100)
@@ -218,6 +226,22 @@ def POSample(csv_file_path):
                 X_plot = pd.DataFrame({'const': 1, 'percentile_GPA_applyQ1': X_plot_range, 'background': background_value * np.ones(len(X_plot_range))})
                 Y_predicted_plot = model.predict(X_plot)
                 return X_plot_range, Y_predicted_plot
+            
+            # Filter the data for background 0 and 1
+            eq1_admitted_df_b0 = eq1_admitted_ols_data[eq1_admitted_ols_data['background'] == 0]
+            eq1_admitted_df_b1 = eq1_admitted_ols_data[eq1_admitted_ols_data['background'] == 1]
+            # Create bins
+            bins = np.linspace(eq1_admitted_ols_data['percentile_GPA_applyQ1'].min(), eq1_admitted_ols_data['percentile_GPA_applyQ1'].max(), 21)
+            bin_centers = 0.5 * (bins[:-1] + bins[1:])
+            # Function to calculate binned averages
+            def binned_average(df, bins):
+                df['bin'] = pd.cut(df['percentile_GPA_applyQ1'], bins, include_lowest=True)
+                binned_avg = df.groupby('bin')['Y'].mean()
+                return bin_centers, binned_avg.values
+            # Calculate binned averages for both backgrounds
+            X_binned_b0, Y_binned_b0 = binned_average(eq1_admitted_df_b0, bins)
+            X_binned_b1, Y_binned_b1 = binned_average(eq1_admitted_df_b1, bins)
+            
 
             # Plotting
             plt.figure(figsize=(12, 6))
@@ -233,6 +257,11 @@ def POSample(csv_file_path):
             plt.plot(X_range, Y_predicted, color='orange', linestyle='--', label='Not Admitted, Background 0')
             X_range, Y_predicted = create_plot_data(eq1_notadmitted_model, X_plot_range_notadmitted, 1)
             plt.plot(X_range, Y_predicted, color='red', linestyle='--', label='Not Admitted, Background 1')
+            
+            # Plot binned scatter for admitted group with background 0
+            plt.scatter(X_binned_b0, Y_binned_b0, color='orange', label='Binned Scatter Admitted, Background 0')
+            # Plot binned scatter for admitted group with background 1
+            plt.scatter(X_binned_b1, Y_binned_b1, color='red', label='Binned Scatter Admitted, Background 1')
 
             # Add a vertical line for GPA cutoff
             plt.axvline(x=data['plot_percentage_gpa_cutoff'].iloc[0], color='black', linestyle='--', linewidth=2, label='GPA Cutoff')
@@ -241,7 +270,7 @@ def POSample(csv_file_path):
             plt.xlabel('Percentile GPA Apply Q1')
             plt.ylabel('Y')
             plt.title('OLS Regression Lines for Q1 Admitted and Not Admitted Groups Across Backgrounds (Equation 1)')
-            plt.legend()
+            plt.legend(loc='upper left')  # Set legend to upper left
             plt.grid(True)
             plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_OLS_eq1.png'))
             plt.close()
@@ -305,7 +334,6 @@ def POSample(csv_file_path):
             print(f"\nStd of Equation (2) for the not admitted: {sigma_2_notadmitted:.2f}")
 
 
-
             # Plot: 
             X_plot_range_admitted = np.linspace(eq2_admitted_X['percentile_S_applyQ2'].min(), eq2_admitted_X['percentile_S_applyQ2'].max(), 100)
             X_plot_range_notadmitted = np.linspace(eq2_notadmitted_X['percentile_S_applyQ2'].min(), eq2_notadmitted_X['percentile_S_applyQ2'].max(), 100)
@@ -321,6 +349,21 @@ def POSample(csv_file_path):
                 })
                 Y_predicted_plot = model.predict(X_plot)
                 return X_plot_range, Y_predicted_plot
+            
+            # Filter the data for background 0 and 1
+            eq2_admitted_df_b0 = eq2_admitted_ols_data[eq2_admitted_ols_data['background'] == 0]
+            eq2_admitted_df_b1 = eq2_admitted_ols_data[eq2_admitted_ols_data['background'] == 1]
+            # Create bins
+            bins = np.linspace(eq2_admitted_ols_data['percentile_S_applyQ2'].min(), eq2_admitted_ols_data['percentile_S_applyQ2'].max(), 21)
+            bin_centers = 0.5 * (bins[:-1] + bins[1:])
+            # Function to calculate binned averages
+            def binned_average(df, bins):
+                df['bin'] = pd.cut(df['percentile_S_applyQ2'], bins, include_lowest=True)
+                binned_avg = df.groupby('bin')['Y'].mean()
+                return bin_centers, binned_avg.values
+            # Calculate binned averages for both backgrounds
+            X_binned_b0, Y_binned_b0 = binned_average(eq2_admitted_df_b0, bins)
+            X_binned_b1, Y_binned_b1 = binned_average(eq2_admitted_df_b1, bins)
 
             # Plotting
             plt.figure(figsize=(12, 6))
@@ -336,6 +379,11 @@ def POSample(csv_file_path):
             plt.plot(X_range, Y_predicted, color='orange', linestyle='--', label='Not Admitted, Background 0')
             X_range, Y_predicted = create_plot_data_eq2(eq2_notadmitted_model, X_plot_range_notadmitted, 1)
             plt.plot(X_range, Y_predicted, color='red', linestyle='--', label='Not Admitted, Background 1')
+            
+            # Plot binned scatter for admitted group with background 0
+            plt.scatter(X_binned_b0, Y_binned_b0, color='orange', label='Binned Scatter Admitted, Background 0')
+            # Plot binned scatter for admitted group with background 1
+            plt.scatter(X_binned_b1, Y_binned_b1, color='red', label='Binned Scatter Admitted, Background 1')
 
             # Add a vertical line for S cutoff
             plt.axvline(x=plot_percentage_S_cutoff_appliedQ2, color='black', linestyle='--', linewidth=2, label='S Cutoff')
@@ -344,7 +392,7 @@ def POSample(csv_file_path):
             plt.xlabel('Percentile S Apply Q2')
             plt.ylabel('Y')
             plt.title('OLS Regression Lines for Q2 Admitted and Not Admitted Group Across Backgrounds (Equation 2)')
-            plt.legend()
+            plt.legend(loc='upper left')  # Set legend to upper left
             plt.grid(True)
             plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_OLS_eq2.png'))
             plt.close()
@@ -1943,18 +1991,30 @@ def POSample(csv_file_path):
 
             # Create a DataFrame
             coefficients_table = pd.DataFrame({
-                'Equtaion (1): Q1 Admitted': coefficients_eq1,
-                'Equtaion (2): Q2 Admitted': coefficients_eq2,
-                'Equtaion (3): Background 0': coefficients_eq3_bg0,
+                'Equation (1): Q1 Admitted': coefficients_eq1,
+                'Equation (2): Q2 Admitted': coefficients_eq2,
+                'Equation (3): Background 0': coefficients_eq3_bg0,
                 'Equation (3): Background 1': coefficients_eq3_bg1,
                 'Equation (3): Pool Background': coefficients_eq3
+            }).round(2)
+            
+            # Add the standard deviations
+            coefficients_table.loc['Standard Deviation'] = pd.Series({
+                'Equation (1): Q1 Admitted': sigma_1,
+                'Equation (2): Q2 Admitted': sigma_2,
             }).round(2)
             
             excel_file_path = os.path.join(tables_directory, f'Program_{program_id}_coefficients_table.xlsx')
             coefficients_table.to_excel(excel_file_path)
             print(f"Coefficients Table saved to {excel_file_path}")
+            
+            print(f"Figures saved to {excel_file_path}")
+    
+    # Reset stdout to its original state
+    sys.stdout = original_stdout
+    print(f"All outputs have been saved to {output_file_path}")
 
 end_time = time.time()
 
 elapsed_time_minutes = (end_time - start_time) / 60
-print(f"Elapsed time: {elapsed_time_minutes:.2f} minutes")            
+print(f"Elapsed time: {elapsed_time_minutes:.2f} minutes")

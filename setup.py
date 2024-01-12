@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='POSample',
-    version='0.3',
+    version='0.4',
     packages=find_packages(),
     description='Python Package for Potential Outcomes and Conditional Probabilities for the project of Social_Mobility_and_Efficiency',
     long_description=open('README.md').read(),
@@ -16,9 +16,10 @@ setup(
         'pandas==1.3.4',
         'seaborn==0.11.2',
         'matplotlib==3.4.3',
-        'scipy==1.10.1',
+        'scipy==1.11.4',
         'scikit-learn==0.24.2',
-        'statsmodels==0.13.5'
+        'statsmodels==0.13.5',
+        'openpyxl==3.0.9',
+        'setuptools==58.0.4'
     ],
 )
-
