@@ -24,7 +24,7 @@ pip install .
 
 ## Usage
 
-Here's a simple example of how to use the `POSample` package, which works in the Jupyter environment:
+Here's a simple example of how to use the `POSample` package, which works after we open Python in the terminal environment:
 
 ```python
 from POSample import POSample

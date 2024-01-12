@@ -583,7 +583,7 @@ def POSample(csv_file_path):
             axs[1].tick_params(top=True, bottom=False, labeltop=True, labelbottom=False)
 
             plt.tight_layout()
-            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P(S | GPA, Q2 > 0,b)_PMF.png'))
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P_S_GPA_Q2_b_PMF.png'))
             plt.close()
 
 
@@ -788,7 +788,7 @@ def POSample(csv_file_path):
 
             # # Add color bar
             # fig.colorbar(cax1, ax=axs, orientation='vertical')
-            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_Modeled P(Y | Q2, GPA,b).png'))
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_Modeled_P_Y_Q2_GPA_b.png'))
             plt.close()
             
 
@@ -848,7 +848,7 @@ def POSample(csv_file_path):
                 ax.grid(True, which='both', linestyle='--', linewidth=0.5, color='k')
 
             plt.tight_layout()
-            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_Modeled P(Y | GPA,b).png'))
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_Modeled_P_Y_GPA_b.png'))
             plt.close()
 
 
@@ -890,7 +890,7 @@ def POSample(csv_file_path):
                 ax.set_ylim(0, max_prob + 0.05)
 
             plt.tight_layout()
-            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P(Q2 | GPA,b).png'))
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P_Q2_GPA_b.png'))
             plt.close()
 
 
@@ -953,7 +953,7 @@ def POSample(csv_file_path):
                 ax.grid(True, which='both', linestyle='--', linewidth=0.5, color='k')
 
             plt.tight_layout()
-            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P(Q2 | GPA, Y)_localapprox.png'))
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P_Q2_GPA_Y_localapprox.png'))
             plt.close()
 
 
@@ -1013,7 +1013,7 @@ def POSample(csv_file_path):
 
             # Adjust layout
             plt.tight_layout()
-            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P(Q2 | GPA, Y)_extrapo.png'))
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P_Q2_GPA_Y_extrapo.png'))
             plt.close()
 
 
@@ -1295,7 +1295,7 @@ def POSample(csv_file_path):
                 ax.set_ylabel('Y Bin')
 
             plt.tight_layout()
-            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P(Q2 | GPA, Y)_Size10.png'))
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P_Q2_GPA_Y_Size10.png'))
             plt.close()
 
 
@@ -1349,7 +1349,7 @@ def POSample(csv_file_path):
                 ax.set_ylabel('Y Bin')
 
             plt.tight_layout()
-            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P(Q2 | GPA, Y)_Size50.png'))
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P_Q2_GPA_Y_Size50.png'))
             plt.close()
 
 
@@ -1426,7 +1426,7 @@ def POSample(csv_file_path):
                 ax.set_ylabel('Y Bin')
 
             plt.tight_layout()
-            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P(S > 0 | GPA, Y, Q2)_localapprox.png'))
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P_Sgt0_GPA_Y_Q2_localapprox.png'))
             plt.close()
 
 
@@ -1501,7 +1501,7 @@ def POSample(csv_file_path):
             plot_heatmap(matrix_p_y_gpa_Sgt0_Q2_bg1, axs[1], 'P(Y | GPA, S > 0, Q2 > 0) from Extrapolation -- B=1', bin_edges, bin_edges_GPA)
 
             plt.tight_layout()
-            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P(Y | Q2, GPA,S>0)_model.png'))
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_PY_Q2_GPA_Sgt0_model.png'))
             plt.close()
 
 
@@ -1613,7 +1613,7 @@ def POSample(csv_file_path):
             axs[1].set_ylim(0, max_probability)  # Set y-axis limit
 
             plt.tight_layout()
-            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P(S > 0 | GPA, Q2)_LPM.png'))
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P_Sgt0_GPA_Q2_LPM.png'))
             plt.close()
 
 
@@ -1684,7 +1684,7 @@ def POSample(csv_file_path):
             plot_heatmap(computed_matrix_bg1, axs[1], 'P(S > 0 | GPA(%), Y, Q2>0) from Extrapolation -- B=1', bin_edges, bin_edges_GPA)
 
             plt.tight_layout()
-            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P(S > 0 | GPA, Y, Q2)_extrapo.png'))
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P_Sgt0_GPA_Y_Q2_extrapo.png'))
             plt.close()
 
             # Save computed matrices under new names
@@ -1752,7 +1752,7 @@ def POSample(csv_file_path):
             plot_heatmap(matrix_Sgt0_given_gpa_y_Q2_Size100_bg1, axs[1], 'P(S > 0 | GPA(%), Y, Q2>0, B=1) with Size Threshold 100', bin_edges, bin_edges_GPA)
 
             plt.tight_layout()
-            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P(S > 0 | GPA, Y, Q2)_Size100.png'))
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P_Sgt0_GPA_Y_Q2_Size100.png'))
             plt.close()
 
 
@@ -1813,7 +1813,7 @@ def POSample(csv_file_path):
             plot_heatmap(matrix_Sgt0_Q2_given_gpa_y_didata_bg1, axs[1], 'P(S > 0, Q2 > 0 | GPA, Y) from Local Approximation -- B=1', bin_edges, bin_edges_GPA)
 
             plt.tight_layout()
-            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P(S > 0, Q2 > 0 | GPA, Y)_localapprox.png'))
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P_Sgt0_Q2gt0_GPA_Y_localapprox.png'))
             plt.close()
 
 
@@ -1866,7 +1866,7 @@ def POSample(csv_file_path):
             plot_heatmap(matrix_Sgt0_Q2_given_gpa_y_bg1, axs[1], 'P(S > 0, Q2 > 0 | GPA, Y) from Extrapolation -- B=1', bin_edges, bin_edges_GPA)
 
             plt.tight_layout()
-            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P(S > 0, Q2 > 0 | GPA, Y)_extrapo.png'))
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P_Sgt0_Q2gt0_GPA_Y_extrapo.png'))
             plt.close()
 
 
@@ -1921,7 +1921,7 @@ def POSample(csv_file_path):
             plot_heatmap(matrix_Sgt0_Q2_given_gpa_y_Size10_bg1, axs[1], 'P(S > 0, Q2 > 0 | GPA, Y): Size 100 for P(S > 0 | GPA, Y, Q2 > 0); Size 10 for P(Q2 > 0 | GPA, Y) -- B=1', bin_edges, bin_edges_GPA)
 
             plt.tight_layout()
-            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P(S > 0, Q2 > 0 | GPA, Y)_Size10.png'))
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P_Sgt0_Q2gt0_GPA_Y_Size10.png'))
             plt.close()
 
 
@@ -1976,7 +1976,7 @@ def POSample(csv_file_path):
             plot_heatmap(matrix_Sgt0_Q2_given_gpa_y_Size50_bg1, axs[1], 'P(S > 0, Q2 > 0 | GPA, Y): Size 100 for P(S > 0 | GPA, Y, Q2 > 0); Size 50 for P(Q2 > 0 | GPA, Y) -- B=1', bin_edges, bin_edges_GPA)
 
             plt.tight_layout()
-            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P(S > 0, Q2 > 0 | GPA, Y)_Size50.png'))
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P_Sgt0_Q2gt0_GPA_Y_Size50.png'))
             plt.close()
 
             # Extract coefficients
