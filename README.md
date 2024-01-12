@@ -11,6 +11,8 @@ The `POSample` package is designed for processing and analyzing data for the pro
 
 **Authors:** Benjamin U. Friedrich, Martin B. Hackmann, Hongyu Mou
 
+**Python version:** **3.8.0** (to avoid the error about the "distutils" package)
+
 ## Installation
 To install the `POSample` package, first open the terminal, clone the repository from GitHub, and then use pip to install it locally:
 
@@ -22,7 +24,7 @@ pip install .
 
 ## Usage
 
-Here's a simple example of how to use the `POSample` package, which works either in terminal or in Jupyter environment:
+Here's a simple example of how to use the `POSample` package, which works in the Jupyter environment:
 
 ```python
 from POSample import POSample
@@ -32,7 +34,16 @@ csv_file_path = 'path_to_csv.csv'
 POSample(csv_file_path)
 ```
 
+Example code in a Jupyter ipynb file after installation:
+
+```python
+from POSample import POSample
+csv_file_path = 'POsampleDGP_simul_example.csv'
+POSample(csv_file_path)
+```
+
 ## Dependencies
+
 - numpy: version 1.22.4
 - pandas: version 1.3.4
 - seaborn: version 0.11.2

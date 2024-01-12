@@ -17,9 +17,6 @@ import os
 import warnings
 import sys
 
-import time
-start_time = time.time()
-
 
 def POSample(csv_file_path):
     
@@ -586,7 +583,7 @@ def POSample(csv_file_path):
             axs[1].tick_params(top=True, bottom=False, labeltop=True, labelbottom=False)
 
             plt.tight_layout()
-            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P[S | GPA, Q2 > 0,b]_PMF.png'))
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P(S | GPA, Q2 > 0,b)_PMF.png'))
             plt.close()
 
 
@@ -2013,8 +2010,3 @@ def POSample(csv_file_path):
     # Reset stdout to its original state
     sys.stdout = original_stdout
     print(f"All outputs have been saved to {output_file_path}")
-
-end_time = time.time()
-
-elapsed_time_minutes = (end_time - start_time) / 60
-print(f"Elapsed time: {elapsed_time_minutes:.2f} minutes")
