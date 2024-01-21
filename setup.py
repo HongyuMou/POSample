@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='POSample',
-    version='0.4',
+    version='0.5',
     packages=find_packages(),
     description='Python Package for Potential Outcomes and Conditional Probabilities for the project of Social_Mobility_and_Efficiency',
     long_description=open('README.md').read(),

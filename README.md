@@ -5,13 +5,13 @@ The `POSample` package is designed for processing and analyzing data for the pro
 
 ------
 
-**Date:** Jan 11, 2024
+**Date:** Jan 20, 2024
 
-**Version:** 0.4 ([Github](https://github.com/HongyuMou/POSample))
+**Version:** 0.5 ([Github](https://github.com/HongyuMou/POSample))
 
 **Authors:** Benjamin U. Friedrich, Martin B. Hackmann, Hongyu Mou
 
-**Python version:** **3.8.0** (to avoid the error about the "distutils" package)
+**Python version:** **3.9.7** (can avoid the error about the "distutils" package)
 
 ## Installation
 To install the `POSample` package, first open the terminal, clone the repository from GitHub, and then use pip to install it locally:

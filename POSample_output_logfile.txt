@@ -6,20 +6,10 @@ Y hat = 10.01 + (0.09)*percentile_GPA_applyQ1 (p=0.001) + (0.20)*background (p=2
 
 Std of Equation (1) for the admitted: 1.00
 
-Equation (1) for the not admitted:
-Y hat = 10.01 + (0.07)*percentile_GPA_applyQ1 (p=0.038) + (0.19)*background (p=4.7e-89) 
-
-Std of Equation (1) for the not admitted: 1.00
-
 Equation (2) for the admitted:
 Y = 9.12 + (-0.04)*percentile_GPA_applyQ1 (p=0.0078) + (2.33)*percentile_S_applyQ2 (p=0) + (0.30)*background (p=3.4e-255) 
 
 Std of Equation (2) for the admitted: 0.70
-
-Equation (2) for the not admitted:
-Y = 9.31 + (-0.03)*percentile_GPA_applyQ1 (p=0.081) + (2.37)*percentile_S_applyQ2 (p=0) + (0.28)*background (p=4.5e-219) 
-
-Std of Equation (2) for the not admitted: 0.71
 
 Equation (3) for subgroup b=0:
 Y = 0.51 + (0.05)*percentile_GPA_applyQ1 (p=5.1e-06) 
@@ -39,20 +29,10 @@ Y hat = 10.01 + (0.08)*percentile_GPA_applyQ1 (p=0.0042) + (0.20)*background (p=
 
 Std of Equation (1) for the admitted: 0.99
 
-Equation (1) for the not admitted:
-Y hat = 10.01 + (0.10)*percentile_GPA_applyQ1 (p=0.0027) + (0.19)*background (p=1.3e-94) 
-
-Std of Equation (1) for the not admitted: 1.00
-
 Equation (2) for the admitted:
 Y = 9.06 + (-0.07)*percentile_GPA_applyQ1 (p=6.7e-06) + (2.43)*percentile_S_applyQ2 (p=0) + (0.29)*background (p=7.2e-226) 
 
 Std of Equation (2) for the admitted: 0.71
-
-Equation (2) for the not admitted:
-Y = 9.30 + (-0.01)*percentile_GPA_applyQ1 (p=0.34) + (2.35)*percentile_S_applyQ2 (p=0) + (0.29)*background (p=8.4e-240) 
-
-Std of Equation (2) for the not admitted: 0.71
 
 Equation (3) for subgroup b=0:
 Y = 0.50 + (0.06)*percentile_GPA_applyQ1 (p=2.3e-09) 

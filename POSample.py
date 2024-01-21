@@ -17,7 +17,6 @@ import os
 import warnings
 import sys
 
-
 def POSample(csv_file_path):
     
     # Extract the directory from the file_path
@@ -155,6 +154,8 @@ def POSample(csv_file_path):
             eq1_admitted_ols_data = data[data['gpa'] >= data['GPA_cutoff']].dropna(subset=['percentile_GPA_applyQ1', 'Y', 'background'])
             eq1_admitted_X = eq1_admitted_ols_data[['percentile_GPA_applyQ1', 'background']]
             eq1_admitted_y = eq1_admitted_ols_data['Y']
+            eq1_all_X = data[['percentile_GPA_applyQ1', 'background']]
+            
             # Add a constant to the model (intercept)
             eq1_admitted_X = sm.add_constant(eq1_admitted_X)
             # Fit the OLS model
@@ -180,43 +181,7 @@ def POSample(csv_file_path):
             print(f"\nStd of Equation (1) for the admitted: {sigma_1:.2f}")
 
 
-            # ## Equation (1): OLS Regression for rows where GPA < GPA_cutoff
-
-            eq1_notadmitted_ols_data = data[data['gpa'] < data['GPA_cutoff']].dropna(subset=['percentile_GPA_applyQ1', 'Y', 'background'])
-            eq1_notadmitted_X = eq1_notadmitted_ols_data[['percentile_GPA_applyQ1', 'background']]
-            eq1_notadmitted_y = eq1_notadmitted_ols_data['Y']
-            # Add a constant to the model (intercept)
-            eq1_notadmitted_X = sm.add_constant(eq1_notadmitted_X)
-            # Fit the OLS model
-            eq1_notadmitted_model = sm.OLS(eq1_notadmitted_y, eq1_notadmitted_X).fit()
-            eq1_notadmitted_predicted_Y = eq1_notadmitted_model.predict(eq1_notadmitted_X)
-
-            # Extract coefficients for Equation (1)
-            coefficients_eq1_notadmitted = eq1_notadmitted_model.params
-            p_values_eq1_notadmitted = eq1_notadmitted_model.pvalues
-            equation1 = f"Y hat = {coefficients_eq1_notadmitted[0]:.2f} "
-            for variable in coefficients_eq1_notadmitted.index[1:]:
-                equation1 += f"+ ({coefficients_eq1_notadmitted[variable]:.2f})*{variable} "
-                equation1 += f"(p={p_values_eq1_notadmitted[variable]:.2g}) "
-            print("\nEquation (1) for the not admitted:")
-            print(equation1)
-
-            # Calculate Y_GPA for all percentile_GPA_applyQ1 values
-            data['Y_GPA_predicted_notadmitted'] = eq1_notadmitted_model.params[0] \
-                                                  + eq1_notadmitted_model.params[1] * data['percentile_GPA_applyQ1'] \
-                                                  + eq1_notadmitted_model.params[2] * data['background']
-
-            # Now calculate residuals
-            data['residuals_notadmitted_Q1'] = data['Y'][data['percentile_GPA_applyQ1'] < data['GPA_cutoff']] \
-                                               - data['Y_GPA_predicted_notadmitted'][data['percentile_GPA_applyQ1'] < data['GPA_cutoff']]
-            # Standard deviation: sigma_1 for conditional probability
-            sigma_1_notadmitted = np.std(data['residuals_notadmitted_Q1'] , ddof=3)
-            print(f"\nStd of Equation (1) for the not admitted: {sigma_1_notadmitted:.2f}")
-
-
-            # Plot: Define ranges for admitted and not admitted groups
-            X_plot_range_admitted = np.linspace(eq1_admitted_X['percentile_GPA_applyQ1'].min(), eq1_admitted_X['percentile_GPA_applyQ1'].max(), 100)
-            X_plot_range_notadmitted = np.linspace(eq1_notadmitted_X['percentile_GPA_applyQ1'].min(), eq1_notadmitted_X['percentile_GPA_applyQ1'].max(), 100)
+            X_plot_range_full = np.linspace(eq1_all_X['percentile_GPA_applyQ1'].min(), eq1_all_X['percentile_GPA_applyQ1'].max(), 100)
 
             # Function to create plot data
             def create_plot_data(model, X_plot_range, background_value):
@@ -224,6 +189,7 @@ def POSample(csv_file_path):
                 Y_predicted_plot = model.predict(X_plot)
                 return X_plot_range, Y_predicted_plot
             
+            ## Bin dots:
             # Filter the data for background 0 and 1
             eq1_admitted_df_b0 = eq1_admitted_ols_data[eq1_admitted_ols_data['background'] == 0]
             eq1_admitted_df_b1 = eq1_admitted_ols_data[eq1_admitted_ols_data['background'] == 1]
@@ -243,17 +209,10 @@ def POSample(csv_file_path):
             # Plotting
             plt.figure(figsize=(12, 6))
 
-            # Admitted group, background 0 and 1
-            X_range, Y_predicted = create_plot_data(eq1_admitted_model, X_plot_range_admitted, 0)
-            plt.plot(X_range, Y_predicted, color='orange', label='Admitted, Background 0')
-            X_range, Y_predicted = create_plot_data(eq1_admitted_model, X_plot_range_admitted, 1)
-            plt.plot(X_range, Y_predicted, color='red', label='Admitted, Background 1')
-
-            # Not admitted group, background 0 and 1
-            X_range, Y_predicted = create_plot_data(eq1_notadmitted_model, X_plot_range_notadmitted, 0)
-            plt.plot(X_range, Y_predicted, color='orange', linestyle='--', label='Not Admitted, Background 0')
-            X_range, Y_predicted = create_plot_data(eq1_notadmitted_model, X_plot_range_notadmitted, 1)
-            plt.plot(X_range, Y_predicted, color='red', linestyle='--', label='Not Admitted, Background 1')
+            X_range, Y_predicted = create_plot_data(eq1_admitted_model, X_plot_range_full, 0)
+            plt.plot(X_range, Y_predicted, color='orange', label='Extrapolated OLS Line, Background 0')
+            X_range, Y_predicted = create_plot_data(eq1_admitted_model, X_plot_range_full, 1)
+            plt.plot(X_range, Y_predicted, color='red', label='Extrapolated OLS Line, Background 1')
             
             # Plot binned scatter for admitted group with background 0
             plt.scatter(X_binned_b0, Y_binned_b0, color='orange', label='Binned Scatter Admitted, Background 0')
@@ -264,9 +223,9 @@ def POSample(csv_file_path):
             plt.axvline(x=data['plot_percentage_gpa_cutoff'].iloc[0], color='black', linestyle='--', linewidth=2, label='GPA Cutoff')
 
             # Customize plot
-            plt.xlabel('Percentile GPA Apply Q1')
+            plt.xlabel('GPA (%): Q1 Appliers')
             plt.ylabel('Y')
-            plt.title('OLS Regression Lines for Q1 Admitted and Not Admitted Groups Across Backgrounds (Equation 1)')
+            plt.title('OLS Lines for Q1 Admitted Groups Across Backgrounds (Equation 1)')
             plt.legend(loc='upper left')  # Set legend to upper left
             plt.grid(True)
             plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_OLS_eq1.png'))
@@ -278,6 +237,7 @@ def POSample(csv_file_path):
             eq2_admitted_ols_data = data[data['S'] > S_cutoff].dropna(subset=['percentile_GPA_applyQ1', 'percentile_S_applyQ2', 'Y', 'background'])
             eq2_admitted_X = eq2_admitted_ols_data[['percentile_GPA_applyQ1', 'percentile_S_applyQ2', 'background']]
             eq2_admitted_y = eq2_admitted_ols_data['Y']
+            eq2_all_X = data[['percentile_GPA_applyQ1', 'percentile_S_applyQ2', 'background']]
             # Add a constant to the model (intercept)
             eq2_admitted_X = sm.add_constant(eq2_admitted_X)
             # Fit the OLS model
@@ -305,35 +265,8 @@ def POSample(csv_file_path):
             print(f"\nStd of Equation (2) for the admitted: {sigma_2:.2f}")
 
 
-            # not admitted:
-            eq2_notadmitted_ols_data = data[data['S'] <= S_cutoff].dropna(subset=['percentile_GPA_applyQ1', 'percentile_S_applyQ2', 'Y', 'background'])
-            eq2_notadmitted_X = eq2_notadmitted_ols_data[['percentile_GPA_applyQ1', 'percentile_S_applyQ2', 'background']]
-            eq2_notadmitted_y = eq2_notadmitted_ols_data['Y']
-            # Add a constant to the model (intercept)
-            eq2_notadmitted_X = sm.add_constant(eq2_notadmitted_X)
-            # Fit the OLS model
-            eq2_notadmitted_model = sm.OLS(eq2_notadmitted_y, eq2_notadmitted_X).fit()
-            eq2_notadmitted_predicted_Y = eq2_notadmitted_model.predict(eq2_notadmitted_X)
-
-            coefficients_eq2_notadmitted = eq2_notadmitted_model.params
-            p_values_eq2_notadmitted = eq2_notadmitted_model.pvalues
-            equation2 = f"Y = {coefficients_eq2_notadmitted[0]:.2f} "
-            for variable in coefficients_eq2_notadmitted.index[1:]:
-                equation2 += f"+ ({coefficients_eq2_notadmitted[variable]:.2f})*{variable} "
-                equation2 += f"(p={p_values_eq2_notadmitted[variable]:.2g}) "
-            print("\nEquation (2) for the not admitted:")
-            print(equation2)
-
-            # Calculate Y_S for all percentile_S_applyQ2 values
-            data['Y_s_GPA_Q2_predicted_notadmitted'] = eq2_notadmitted_model.params[0] + eq2_notadmitted_model.params[1] * data['percentile_GPA_applyQ1'] + eq2_notadmitted_model.params[2] * data['percentile_S_applyQ2'] + eq2_notadmitted_model.params[3] * data['background']
-            data['residuals_notadmitted_Q2'] = data['Y'][data['percentile_S_applyQ2'] <= plot_percentage_S_cutoff_appliedQ2] - data['Y_s_GPA_Q2_predicted'][data['percentile_S_applyQ2'] <= plot_percentage_S_cutoff_appliedQ2]
-            sigma_2_notadmitted = np.std(data['residuals_notadmitted_Q2'] , ddof=4)
-            print(f"\nStd of Equation (2) for the not admitted: {sigma_2_notadmitted:.2f}")
-
-
             # Plot: 
-            X_plot_range_admitted = np.linspace(eq2_admitted_X['percentile_S_applyQ2'].min(), eq2_admitted_X['percentile_S_applyQ2'].max(), 100)
-            X_plot_range_notadmitted = np.linspace(eq2_notadmitted_X['percentile_S_applyQ2'].min(), eq2_notadmitted_X['percentile_S_applyQ2'].max(), 100)
+            X_plot_range_full = np.linspace(eq2_all_X['percentile_S_applyQ2'].min(), eq2_all_X['percentile_S_applyQ2'].max(), 100)
 
 
             # Function to create plot data for Equation (2)
@@ -347,6 +280,7 @@ def POSample(csv_file_path):
                 Y_predicted_plot = model.predict(X_plot)
                 return X_plot_range, Y_predicted_plot
             
+            ## Bin dots:
             # Filter the data for background 0 and 1
             eq2_admitted_df_b0 = eq2_admitted_ols_data[eq2_admitted_ols_data['background'] == 0]
             eq2_admitted_df_b1 = eq2_admitted_ols_data[eq2_admitted_ols_data['background'] == 1]
@@ -365,17 +299,10 @@ def POSample(csv_file_path):
             # Plotting
             plt.figure(figsize=(12, 6))
 
-            # Admitted group, background 0 and 1 for Equation (2)
-            X_range, Y_predicted = create_plot_data_eq2(eq2_admitted_model, X_plot_range_admitted, 0)
-            plt.plot(X_range, Y_predicted, color='orange', label='Admitted, Background 0')
-            X_range, Y_predicted = create_plot_data_eq2(eq2_admitted_model, X_plot_range_admitted, 1)
-            plt.plot(X_range, Y_predicted, color='red', label='Admitted, Background 1')
-
-            # Not Admitted group, background 0 and 1 for Equation (2)
-            X_range, Y_predicted = create_plot_data_eq2(eq2_notadmitted_model, X_plot_range_notadmitted, 0)
-            plt.plot(X_range, Y_predicted, color='orange', linestyle='--', label='Not Admitted, Background 0')
-            X_range, Y_predicted = create_plot_data_eq2(eq2_notadmitted_model, X_plot_range_notadmitted, 1)
-            plt.plot(X_range, Y_predicted, color='red', linestyle='--', label='Not Admitted, Background 1')
+            X_range, Y_predicted = create_plot_data_eq2(eq2_admitted_model, X_plot_range_full, 0)
+            plt.plot(X_range, Y_predicted, color='orange', label='Extrapolated OLS Line, Background 0')
+            X_range, Y_predicted = create_plot_data_eq2(eq2_admitted_model, X_plot_range_full, 1)
+            plt.plot(X_range, Y_predicted, color='red', label='Extrapolated OLS Line, Background 1')
             
             # Plot binned scatter for admitted group with background 0
             plt.scatter(X_binned_b0, Y_binned_b0, color='orange', label='Binned Scatter Admitted, Background 0')
@@ -386,9 +313,9 @@ def POSample(csv_file_path):
             plt.axvline(x=plot_percentage_S_cutoff_appliedQ2, color='black', linestyle='--', linewidth=2, label='S Cutoff')
 
             # Customize plot
-            plt.xlabel('Percentile S Apply Q2')
+            plt.xlabel('S (%): Q2 Appliers')
             plt.ylabel('Y')
-            plt.title('OLS Regression Lines for Q2 Admitted and Not Admitted Group Across Backgrounds (Equation 2)')
+            plt.title('OLS Lines for Q2 Admitted Group Across Backgrounds (Equation 2)')
             plt.legend(loc='upper left')  # Set legend to upper left
             plt.grid(True)
             plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_OLS_eq2.png'))
@@ -1978,28 +1905,36 @@ def POSample(csv_file_path):
             plt.tight_layout()
             plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P_Sgt0_Q2gt0_GPA_Y_Size50.png'))
             plt.close()
-
-            # Extract coefficients
-            coefficients_eq1 = eq1_admitted_model.params
-            coefficients_eq2 = eq2_admitted_model.params
-            coefficients_eq3_bg0 = eq3_admitted_model_bg0.params
-            coefficients_eq3_bg1 = eq3_admitted_model_bg1.params
-            coefficients_eq3 = eq3_admitted_model.params
-
-            # Create a DataFrame
-            coefficients_table = pd.DataFrame({
-                'Equation (1): Q1 Admitted': coefficients_eq1,
-                'Equation (2): Q2 Admitted': coefficients_eq2,
-                'Equation (3): Background 0': coefficients_eq3_bg0,
-                'Equation (3): Background 1': coefficients_eq3_bg1,
-                'Equation (3): Pool Background': coefficients_eq3
-            }).round(2)
             
+
+            
+            # Function to interleave coefficients and standard errors
+            def interleave_coeffs_and_se(coeffs, se):
+                interleaved = {}
+                for name in coeffs.index:
+                    interleaved[name] = f"{coeffs[name]:.2f}"
+                    interleaved[name + ' (SE)'] = f"({se[name]:.2f})"
+                return interleaved
+
+            # Prepare the coefficients and SEs for each equation
+            coefficients_se_eq1 = interleave_coeffs_and_se(eq1_admitted_model.params, eq1_admitted_model.bse)
+            coefficients_se_eq2 = interleave_coeffs_and_se(eq2_admitted_model.params, eq2_admitted_model.bse)
+            coefficients_se_eq3_bg0 = interleave_coeffs_and_se(eq3_admitted_model_bg0.params, eq3_admitted_model_bg0.bse)
+            coefficients_se_eq3_bg1 = interleave_coeffs_and_se(eq3_admitted_model_bg1.params, eq3_admitted_model_bg1.bse)
+            coefficients_se_eq3 = interleave_coeffs_and_se(eq3_admitted_model.params, eq3_admitted_model.bse)
+
+            # Create the DataFrame
+            coefficients_table = pd.DataFrame({
+                'Equation (1): Q1 Admitted': pd.Series(coefficients_se_eq1),
+                'Equation (2): Q2 Admitted': pd.Series(coefficients_se_eq2),
+                'Equation (3): Background 0': pd.Series(coefficients_se_eq3_bg0),
+                'Equation (3): Background 1': pd.Series(coefficients_se_eq3_bg1),
+                'Equation (3): Pool Background': pd.Series(coefficients_se_eq3)
+            })
+
             # Add the standard deviations
-            coefficients_table.loc['Standard Deviation'] = pd.Series({
-                'Equation (1): Q1 Admitted': sigma_1,
-                'Equation (2): Q2 Admitted': sigma_2,
-            }).round(2)
+            coefficients_table.loc['Standard Deviation', 'Equation (1): Q1 Admitted'] = round(sigma_1, 2)
+            coefficients_table.loc['Standard Deviation', 'Equation (2): Q2 Admitted'] = round(sigma_2, 2)
             
             excel_file_path = os.path.join(tables_directory, f'Program_{program_id}_coefficients_table.xlsx')
             coefficients_table.to_excel(excel_file_path)
