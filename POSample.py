@@ -348,7 +348,7 @@ def POSample(csv_file_path):
 
             # Plot histogram for residuals on the first subplot (Q1)
             ax1.hist(data['residuals_admitted_Q1'], bins=30, edgecolor='black', alpha=0.7)
-            ax1.set_title('Histogram of $\epsilon_1$')
+            ax1.set_title('Histogram of $epsilon_1$')
             ax1.set_xlabel('Residual value')
             ax1.set_ylabel('Frequency')
 
@@ -365,7 +365,7 @@ def POSample(csv_file_path):
 
             # Plot histogram for residuals on the second subplot (Q2)
             ax3.hist(data['residuals_admitted_Q2'], bins=30, edgecolor='black', alpha=0.7)
-            ax3.set_title('Histogram of $\epsilon_2$')
+            ax3.set_title('Histogram of $epsilon_2$')
             ax3.set_xlabel('Residual value')
             ax3.set_ylabel('Frequency')
 
