@@ -29,7 +29,7 @@ def POSample(csv_file_path):
     original_stdout = sys.stdout  # Save a reference to the original standard output
     with open(output_file_path, 'w') as file:
         sys.stdout = file
-        
+
         # Create a path for the 'figures' subdirectory
         figures_directory = os.path.join(directory, 'figures')
         # Create the 'figures' directory if it doesn't exist
@@ -54,7 +54,7 @@ def POSample(csv_file_path):
         unique_programs = data_all['program_id'].unique()
 
         for program_id in unique_programs:
-        
+
             print("-" * 40)
             print(f"Program: {program_id}")
 
@@ -62,7 +62,7 @@ def POSample(csv_file_path):
 
             # Calculate the percentage of students in the entire sample with GPA >= GPA_cutoff
             percentage_above_cutoff_total = len(data[data['gpa'] >= data['GPA_cutoff']]) / len(data) * 100
-            
+
             data['plot_percentage_gpa_cutoff'] = (100 - percentage_above_cutoff_total) / 100
 
             def custom_min_max_scaling(percentiles, min_value, max_value):
@@ -155,7 +155,7 @@ def POSample(csv_file_path):
             eq1_admitted_X = eq1_admitted_ols_data[['percentile_GPA_applyQ1', 'background']]
             eq1_admitted_y = eq1_admitted_ols_data['Y']
             eq1_all_X = data[['percentile_GPA_applyQ1', 'background']]
-            
+
             # Add a constant to the model (intercept)
             eq1_admitted_X = sm.add_constant(eq1_admitted_X)
             # Fit the OLS model
@@ -188,7 +188,7 @@ def POSample(csv_file_path):
                 X_plot = pd.DataFrame({'const': 1, 'percentile_GPA_applyQ1': X_plot_range, 'background': background_value * np.ones(len(X_plot_range))})
                 Y_predicted_plot = model.predict(X_plot)
                 return X_plot_range, Y_predicted_plot
-            
+
             ## Bin dots:
             # Filter the data for background 0 and 1
             eq1_admitted_df_b0 = eq1_admitted_ols_data[eq1_admitted_ols_data['background'] == 0]
@@ -204,7 +204,7 @@ def POSample(csv_file_path):
             # Calculate binned averages for both backgrounds
             X_binned_b0, Y_binned_b0 = binned_average(eq1_admitted_df_b0, bins)
             X_binned_b1, Y_binned_b1 = binned_average(eq1_admitted_df_b1, bins)
-            
+
 
             # Plotting
             plt.figure(figsize=(12, 6))
@@ -213,7 +213,7 @@ def POSample(csv_file_path):
             plt.plot(X_range, Y_predicted, color='orange', label='Extrapolated OLS Line, Background 0')
             X_range, Y_predicted = create_plot_data(eq1_admitted_model, X_plot_range_full, 1)
             plt.plot(X_range, Y_predicted, color='red', label='Extrapolated OLS Line, Background 1')
-            
+
             # Plot binned scatter for admitted group with background 0
             plt.scatter(X_binned_b0, Y_binned_b0, color='orange', label='Binned Scatter Admitted, Background 0')
             # Plot binned scatter for admitted group with background 1
@@ -230,7 +230,7 @@ def POSample(csv_file_path):
             plt.grid(True)
             plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_OLS_eq1.png'))
             plt.close()
-            
+
 
             # Equation (2)
             S_cutoff = 0
@@ -254,8 +254,8 @@ def POSample(csv_file_path):
                 equation2 += f"(p={p_values_eq2_admitted[variable]:.2g}) "
             print("\nEquation (2) for the admitted:")
             print(equation2)
-            
-            
+
+
 
             # Calculate Y_S for all percentile_S_applyQ2 values
             data['Y_s_GPA_Q2_predicted'] = eq2_admitted_model.params[0] + eq2_admitted_model.params[1] * data['percentile_GPA_applyQ1'] + eq2_admitted_model.params[2] * data['percentile_S_applyQ2'] + eq2_admitted_model.params[3] * data['background']
@@ -279,7 +279,7 @@ def POSample(csv_file_path):
                 })
                 Y_predicted_plot = model.predict(X_plot)
                 return X_plot_range, Y_predicted_plot
-            
+
             ## Bin dots:
             # Filter the data for background 0 and 1
             eq2_admitted_df_b0 = eq2_admitted_ols_data[eq2_admitted_ols_data['background'] == 0]
@@ -303,7 +303,7 @@ def POSample(csv_file_path):
             plt.plot(X_range, Y_predicted, color='orange', label='Extrapolated OLS Line, Background 0')
             X_range, Y_predicted = create_plot_data_eq2(eq2_admitted_model, X_plot_range_full, 1)
             plt.plot(X_range, Y_predicted, color='red', label='Extrapolated OLS Line, Background 1')
-            
+
             # Plot binned scatter for admitted group with background 0
             plt.scatter(X_binned_b0, Y_binned_b0, color='orange', label='Binned Scatter Admitted, Background 0')
             # Plot binned scatter for admitted group with background 1
@@ -473,45 +473,104 @@ def POSample(csv_file_path):
             # ## P(Y | Q2, GPA) 
 
             # Function to calculate conditional probabilities
-            def calculate_conditional_probabilities(data):
-                counts_per_group = data.groupby(['GPA_bin_Q2', 'Score_bin_Q2']).size()
-                total_counts_per_gpa_bin = data.groupby('GPA_bin_Q2').size()
-                prob_s_given_gpa_q2 = counts_per_group.div(total_counts_per_gpa_bin, level='GPA_bin_Q2')
-                prob_s_given_gpa_q2_df = prob_s_given_gpa_q2.reset_index(name='Conditional_Probability')
-                return prob_s_given_gpa_q2_df.pivot('Score_bin_Q2', 'GPA_bin_Q2', 'Conditional_Probability')
 
-            # Calculate matrices for background = 0 and background = 1
-            prob_s_given_gpa_q2_bg0 = calculate_conditional_probabilities(data_filtered_bg0)
-            prob_s_given_gpa_q2_bg1 = calculate_conditional_probabilities(data_filtered_bg1)
+            def calculate_conditional_probabilities(data, include_counts=False):
+                """
+                Calculate conditional probabilities from data.
+
+                Parameters:
+                data (DataFrame): The input data.
+                include_counts (bool): If True, include counts in the output.
+
+                Returns:
+                DataFrame: A pivoted DataFrame with conditional probabilities and optionally counts.
+                """
+                grouped_data = data.groupby(['GPA_bin_Q2', 'Score_bin_Q2']).size()
+                total_counts_per_gpa_bin = data.groupby('GPA_bin_Q2').size()
+                prob_s_given_gpa_q2 = grouped_data.div(total_counts_per_gpa_bin, level='GPA_bin_Q2')
+
+                prob_df = prob_s_given_gpa_q2.reset_index(name='Conditional_Probability')
+
+                if include_counts:
+                    counts_df = grouped_data.reset_index(name='Counts')
+                    merged_df = pd.merge(counts_df, prob_df, on=['GPA_bin_Q2', 'Score_bin_Q2'])
+                    return merged_df.pivot('Score_bin_Q2', 'GPA_bin_Q2', ['Counts', 'Conditional_Probability'])
+
+                return prob_df.pivot('Score_bin_Q2', 'GPA_bin_Q2', 'Conditional_Probability')
+
+            # Calculating for background = 0
+            prob_s_given_gpa_q2_bg0 = calculate_conditional_probabilities(data_filtered_bg0, include_counts=False)
+            prob_s_given_gpa_q2_bg0_with_counts = calculate_conditional_probabilities(data_filtered_bg0, include_counts=True)
+
+            # Calculating for background = 1
+            prob_s_given_gpa_q2_bg1 = calculate_conditional_probabilities(data_filtered_bg1, include_counts=False)
+            prob_s_given_gpa_q2_bg1_with_counts = calculate_conditional_probabilities(data_filtered_bg1, include_counts=True)
+
+            # Convert 'Counts' to integers
+            prob_s_given_gpa_q2_bg0_with_counts['Counts'] = prob_s_given_gpa_q2_bg0_with_counts['Counts'].astype(int)
+            prob_s_given_gpa_q2_bg1_with_counts['Counts'] = prob_s_given_gpa_q2_bg1_with_counts['Counts'].astype(int)
+
+
 
             # Plotting subfigures
             # Determine common scale for the color range
             vmin = min(prob_s_given_gpa_q2_bg0.min().min(), prob_s_given_gpa_q2_bg1.min().min())  # Minimum value for color scale
             vmax = max(prob_s_given_gpa_q2_bg0.max().max(), prob_s_given_gpa_q2_bg1.max().max())  # Maximum value for color scale
+            vmin_counts = min(prob_s_given_gpa_q2_bg0_with_counts['Counts'].min().min(), prob_s_given_gpa_q2_bg1_with_counts['Counts'].min().min())
+            vmax_counts = max(prob_s_given_gpa_q2_bg0_with_counts['Counts'].max().max(), prob_s_given_gpa_q2_bg1_with_counts['Counts'].max().max())
 
-            fig, axs = plt.subplots(1, 2, figsize=(28, 10))
+            total_counts_per_gpa_bin_bg0 = data_filtered_bg0.groupby('GPA_bin_Q2').size()
+            total_counts_per_gpa_bin_bg1 = data_filtered_bg1.groupby('GPA_bin_Q2').size()
 
-            # Plot for background = 0
-            sns.heatmap(prob_s_given_gpa_q2_bg0, annot=True, fmt=".2f", cmap="YlGnBu", vmin=vmin, vmax=vmax, ax=axs[0])
-            axs[0].set_title('PMF P[S | GPA, Q2 > 0, B=0]')
-            axs[0].set_xlabel('GPA Bin')
-            axs[0].set_ylabel('S Bin')
-            axs[0].xaxis.tick_top()
-            axs[0].xaxis.set_label_position('top')
-            axs[0].tick_params(top=True, bottom=False, labeltop=True, labelbottom=False)
 
-            # Plot for background = 1
-            sns.heatmap(prob_s_given_gpa_q2_bg1, annot=True, fmt=".2f", cmap="YlGnBu", vmin=vmin, vmax=vmax, ax=axs[1])
-            axs[1].set_title('PMF P[S | GPA, Q2 > 0, B=1]')
-            axs[1].set_xlabel('GPA Bin')
-            axs[1].set_ylabel('S Bin')
-            axs[1].xaxis.tick_top()
-            axs[1].xaxis.set_label_position('top')
-            axs[1].tick_params(top=True, bottom=False, labeltop=True, labelbottom=False)
+
+            # Plotting counts for background = 0 and background = 1
+            fig, axs = plt.subplots(3, 2, figsize=(28, 30)) # 3 rows for counts and probabilities, 2 columns for each background
+
+            # Plotting total_counts_per_gpa_bin for background = 0 and background = 1
+            total_counts_per_gpa_bin_bg0.plot(kind='bar', ax=axs[0, 0], color='lightgreen', width=1, edgecolor='black', linewidth=1)
+            axs[0, 0].set_title('Total Counts per GPA Bin: Background = 0')
+            axs[0, 0].set_xlabel('GPA Bin')
+            axs[0, 0].set_ylabel('Counts')
+
+            total_counts_per_gpa_bin_bg1.plot(kind='bar', ax=axs[0, 1], color='lightgreen', width=1, edgecolor='black', linewidth=1)
+            axs[0, 1].set_title('Total Counts per GPA Bin: Background = 1')
+            axs[0, 1].set_xlabel('GPA Bin')
+            axs[0, 1].set_ylabel('Counts')
+
+            # Counts plot for background = 0
+            sns.heatmap(prob_s_given_gpa_q2_bg0_with_counts['Counts'], annot=True, fmt="d", cmap="Greens", vmin=vmin_counts, vmax=vmax_counts, ax=axs[1, 0])
+            axs[1, 0].set_title('Counts: Background = 0')
+            axs[1, 0].set_xlabel('GPA Bin')
+            axs[1, 0].xaxis.tick_top()
+            axs[1, 0].set_ylabel('S Bin')
+
+            # Counts plot for background = 1
+            sns.heatmap(prob_s_given_gpa_q2_bg1_with_counts['Counts'], annot=True, fmt="d", cmap="Greens", vmin=vmin_counts, vmax=vmax_counts, ax=axs[1, 1])
+            axs[1, 1].set_title('Counts: Background = 1')
+            axs[1, 1].set_xlabel('GPA Bin')
+            axs[1, 1].xaxis.tick_top()
+            axs[1, 1].set_ylabel('S Bin')
+
+            # Probability plot for background = 0
+            sns.heatmap(prob_s_given_gpa_q2_bg0_with_counts['Conditional_Probability'], annot=True, fmt=".2f", cmap="YlGnBu", vmin=vmin, vmax=vmax, ax=axs[2, 0])
+            axs[2, 0].set_title('PMF P[S | GPA, Q2 > 0, B=0]')
+            axs[2, 0].set_xlabel('GPA Bin')
+            axs[2, 0].xaxis.tick_top()
+            axs[2, 0].set_ylabel('S Bin')
+
+            # Probability plot for background = 1
+            sns.heatmap(prob_s_given_gpa_q2_bg1_with_counts['Conditional_Probability'], annot=True, fmt=".2f", cmap="YlGnBu", vmin=vmin, vmax=vmax, ax=axs[2, 1])
+            axs[2, 1].set_title('PMF P[S | GPA, Q2 > 0, B=1]')
+            axs[2, 1].set_xlabel('GPA Bin')
+            axs[2, 1].xaxis.tick_top()
+            axs[2, 1].set_ylabel('S Bin')
 
             plt.tight_layout()
-            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P_S_GPA_Q2_b_PMF.png'))
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P_S_GPA_Q2_b_PMF_Counts.png'))
             plt.close()
+
+
 
 
             # #### Calculate P[Y in y_bin | GPA(%) in gpa_bin, Q2>0, s(%) in S_bin]
@@ -717,7 +776,7 @@ def POSample(csv_file_path):
             # fig.colorbar(cax1, ax=axs, orientation='vertical')
             plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_Modeled_P_Y_Q2_GPA_b.png'))
             plt.close()
-            
+
 
 
             # ## P(Y | GPA)
@@ -1905,9 +1964,9 @@ def POSample(csv_file_path):
             plt.tight_layout()
             plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P_Sgt0_Q2gt0_GPA_Y_Size50.png'))
             plt.close()
-            
 
-            
+
+
             # Function to interleave coefficients and standard errors
             def interleave_coeffs_and_se(coeffs, se):
                 interleaved = {}
@@ -1935,13 +1994,13 @@ def POSample(csv_file_path):
             # Add the standard deviations
             coefficients_table.loc['Standard Deviation', 'Equation (1): Q1 Admitted'] = round(sigma_1, 2)
             coefficients_table.loc['Standard Deviation', 'Equation (2): Q2 Admitted'] = round(sigma_2, 2)
-            
+
             excel_file_path = os.path.join(tables_directory, f'Program_{program_id}_coefficients_table.xlsx')
             coefficients_table.to_excel(excel_file_path)
             print(f"Coefficients Table saved to {excel_file_path}")
-            
+
             print(f"Figures saved to {excel_file_path}")
-    
+            
     # Reset stdout to its original state
     sys.stdout = original_stdout
     print(f"All outputs have been saved to {output_file_path}")
