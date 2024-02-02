@@ -7,19 +7,23 @@ Y hat = 10.01 + (0.09)*percentile_GPA_applyQ1 (p=0.001) + (0.20)*background (p=2
 Std of Equation (1) for the admitted: 1.00
 
 Equation (2) for the admitted:
-Y = 9.12 + (-0.04)*percentile_GPA_applyQ1 (p=0.0078) + (2.33)*percentile_S_applyQ2 (p=0) + (0.30)*background (p=3.4e-255) 
+Y hat = 9.12 + (-0.04)*percentile_GPA_applyQ1 (p=0.0078) + (2.33)*percentile_S_applyQ2 (p=0) + (0.30)*background (p=3.4e-255) 
 
 Std of Equation (2) for the admitted: 0.70
 
 Equation (3) for subgroup b=0:
-Y = 0.51 + (0.05)*percentile_GPA_applyQ1 (p=5.1e-06) 
+1(S > 0) = 0.51 + (0.05)*percentile_GPA_applyQ1 (p=5.1e-06) 
 
 Equation (3) for subgroup b=1:
-Y = 0.42 + (0.06)*percentile_GPA_applyQ1 (p=5.6e-10) 
+1(S > 0) = 0.42 + (0.06)*percentile_GPA_applyQ1 (p=5.6e-10) 
 
 Equation (3) with regressor b:
-Y = 0.51 + (0.06)*percentile_GPA_applyQ1 (p=2.4e-14) + (-0.08)*background (p=6.5e-85) 
-Coefficients Table saved to /Users/PC/Library/CloudStorage/Dropbox/Mac/Desktop/POSample/tables/Program_0_coefficients_table.xlsx
+1(S > 0) = 0.51 + (0.06)*percentile_GPA_applyQ1 (p=2.4e-14) + (-0.08)*background (p=6.5e-85) 
+P(Q2>0 | B=0): 0.53
+P(Q2>0 | B=1): 0.57
+P(S>0, Q2>0 | B=0): 0.28
+P(S>0, Q2>0 | B=1): 0.26
+Tables saved to /Users/PC/Library/CloudStorage/Dropbox/Mac/Desktop/POSample/tables/Program_0_coefficients_table.xlsx
 Figures saved to /Users/PC/Library/CloudStorage/Dropbox/Mac/Desktop/POSample/tables/Program_0_coefficients_table.xlsx
 ----------------------------------------
 Program: 1
@@ -30,17 +34,21 @@ Y hat = 10.01 + (0.08)*percentile_GPA_applyQ1 (p=0.0042) + (0.20)*background (p=
 Std of Equation (1) for the admitted: 0.99
 
 Equation (2) for the admitted:
-Y = 9.06 + (-0.07)*percentile_GPA_applyQ1 (p=6.7e-06) + (2.43)*percentile_S_applyQ2 (p=0) + (0.29)*background (p=7.2e-226) 
+Y hat = 9.06 + (-0.07)*percentile_GPA_applyQ1 (p=6.7e-06) + (2.43)*percentile_S_applyQ2 (p=0) + (0.29)*background (p=7.2e-226) 
 
 Std of Equation (2) for the admitted: 0.71
 
 Equation (3) for subgroup b=0:
-Y = 0.50 + (0.06)*percentile_GPA_applyQ1 (p=2.3e-09) 
+1(S > 0) = 0.50 + (0.06)*percentile_GPA_applyQ1 (p=2.3e-09) 
 
 Equation (3) for subgroup b=1:
-Y = 0.43 + (0.05)*percentile_GPA_applyQ1 (p=3.9e-06) 
+1(S > 0) = 0.43 + (0.05)*percentile_GPA_applyQ1 (p=3.9e-06) 
 
 Equation (3) with regressor b:
-Y = 0.50 + (0.06)*percentile_GPA_applyQ1 (p=7.8e-14) + (-0.08)*background (p=2.9e-78) 
-Coefficients Table saved to /Users/PC/Library/CloudStorage/Dropbox/Mac/Desktop/POSample/tables/Program_1_coefficients_table.xlsx
+1(S > 0) = 0.50 + (0.06)*percentile_GPA_applyQ1 (p=7.8e-14) + (-0.08)*background (p=2.9e-78) 
+P(Q2>0 | B=0): 0.53
+P(Q2>0 | B=1): 0.58
+P(S>0, Q2>0 | B=0): 0.28
+P(S>0, Q2>0 | B=1): 0.26
+Tables saved to /Users/PC/Library/CloudStorage/Dropbox/Mac/Desktop/POSample/tables/Program_1_coefficients_table.xlsx
 Figures saved to /Users/PC/Library/CloudStorage/Dropbox/Mac/Desktop/POSample/tables/Program_1_coefficients_table.xlsx

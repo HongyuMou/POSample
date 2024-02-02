@@ -18,13 +18,13 @@ import warnings
 import sys
 
 def POSample(csv_file_path):
-    
+
     # Extract the directory from the file_path
     directory = os.path.dirname(csv_file_path)
-    
+
     # Define a path for the output text file
     output_file_path = os.path.join(directory, 'POSample_output_logfile.txt')
-    
+
     # Open the output file and redirect stdout
     original_stdout = sys.stdout  # Save a reference to the original standard output
     with open(output_file_path, 'w') as file:
@@ -53,6 +53,11 @@ def POSample(csv_file_path):
         # Modify here to iterate over each unique program
         unique_programs = data_all['program_id'].unique()
 
+        # Initialize an empty DataFrame for the Efficiency-Equity table
+        EffiEqui_table = pd.DataFrame(columns=['Program_ID', 'Count_Q2_Admitted', 'Mean_Y_Q2', 
+                                              'Mean_Y_CounterQ1', 'Efficiency', 'Equity', 
+                                              'Perc_Background0_Q2'])
+
         for program_id in unique_programs:
 
             print("-" * 40)
@@ -63,7 +68,8 @@ def POSample(csv_file_path):
             # Calculate the percentage of students in the entire sample with GPA >= GPA_cutoff
             percentage_above_cutoff_total = len(data[data['gpa'] >= data['GPA_cutoff']]) / len(data) * 100
 
-            data['plot_percentage_gpa_cutoff'] = (100 - percentage_above_cutoff_total) / 100
+            data['gpa_percentage_cutoff'] = (100 - percentage_above_cutoff_total) / 100
+
 
             def custom_min_max_scaling(percentiles, min_value, max_value):
                 """Apply custom Min-Max scaling."""
@@ -175,7 +181,7 @@ def POSample(csv_file_path):
 
             # Calculate Y_GPA for all percentile_GPA_applyQ1 values
             data['Y_GPA_predicted'] = eq1_admitted_model.params[0] + eq1_admitted_model.params[1] * data['percentile_GPA_applyQ1'] + eq1_admitted_model.params[2] * data['background']
-            data['residuals_admitted_Q1'] = data['Y'][data['percentile_GPA_applyQ1'] >= data['plot_percentage_gpa_cutoff']] - data['Y_GPA_predicted'][data['percentile_GPA_applyQ1'] >= data['plot_percentage_gpa_cutoff']]
+            data['residuals_admitted_Q1'] = data['Y'][data['percentile_GPA_applyQ1'] >= data['gpa_percentage_cutoff']] - data['Y_GPA_predicted'][data['percentile_GPA_applyQ1'] >= data['gpa_percentage_cutoff']]
             # Standard deviation: sigma_1 for conditional probability
             sigma_1 = np.std(data['residuals_admitted_Q1'] , ddof=3)
             print(f"\nStd of Equation (1) for the admitted: {sigma_1:.2f}")
@@ -220,7 +226,7 @@ def POSample(csv_file_path):
             plt.scatter(X_binned_b1, Y_binned_b1, color='red', label='Binned Scatter Admitted, Background 1')
 
             # Add a vertical line for GPA cutoff
-            plt.axvline(x=data['plot_percentage_gpa_cutoff'].iloc[0], color='black', linestyle='--', linewidth=2, label='GPA Cutoff')
+            plt.axvline(x=data['gpa_percentage_cutoff'].iloc[0], color='black', linestyle='--', linewidth=2, label='GPA Cutoff')
 
             # Customize plot
             plt.xlabel('GPA (%): Q1 Appliers')
@@ -248,7 +254,7 @@ def POSample(csv_file_path):
             # Extract coefficients for Equation (2)
             coefficients_eq2_admitted = eq2_admitted_model.params
             p_values_eq2_admitted = eq2_admitted_model.pvalues
-            equation2 = f"Y = {coefficients_eq2_admitted[0]:.2f} "
+            equation2 = f"Y hat = {coefficients_eq2_admitted[0]:.2f} "
             for variable in coefficients_eq2_admitted.index[1:]:
                 equation2 += f"+ ({coefficients_eq2_admitted[variable]:.2f})*{variable} "
                 equation2 += f"(p={p_values_eq2_admitted[variable]:.2g}) "
@@ -525,42 +531,37 @@ def POSample(csv_file_path):
 
 
             # Plotting counts for background = 0 and background = 1
-            fig, axs = plt.subplots(3, 2, figsize=(28, 30)) # 3 rows for counts and probabilities, 2 columns for each background
+            fig, axs = plt.subplots(3, 2, figsize=(25, 30)) # 3 rows for counts and probabilities, 2 columns for each background
 
-            # Plotting total_counts_per_gpa_bin for background = 0 and background = 1
-            total_counts_per_gpa_bin_bg0.plot(kind='bar', ax=axs[0, 0], color='lightgreen', width=1, edgecolor='black', linewidth=1)
+            # Plots for background = 0 and background = 1
+            total_counts_per_gpa_bin_bg0.plot(kind='bar', ax=axs[0, 0], color='grey', width=1, edgecolor='black', linewidth=1)
             axs[0, 0].set_title('Total Counts per GPA Bin: Background = 0')
             axs[0, 0].set_xlabel('GPA Bin')
             axs[0, 0].set_ylabel('Counts')
-
-            total_counts_per_gpa_bin_bg1.plot(kind='bar', ax=axs[0, 1], color='lightgreen', width=1, edgecolor='black', linewidth=1)
+            axs[0, 0].grid(True, linestyle='--', linewidth=0.7, alpha=0.7)
+            total_counts_per_gpa_bin_bg1.plot(kind='bar', ax=axs[0, 1], color='grey', width=1, edgecolor='black', linewidth=1)
             axs[0, 1].set_title('Total Counts per GPA Bin: Background = 1')
             axs[0, 1].set_xlabel('GPA Bin')
             axs[0, 1].set_ylabel('Counts')
+            axs[0, 1].grid(True, linestyle='--', linewidth=0.7, alpha=0.7)
 
-            # Counts plot for background = 0
-            sns.heatmap(prob_s_given_gpa_q2_bg0_with_counts['Counts'], annot=True, fmt="d", cmap="Greens", vmin=vmin_counts, vmax=vmax_counts, ax=axs[1, 0])
+            sns.heatmap(prob_s_given_gpa_q2_bg0_with_counts['Counts'], annot=True, fmt="d", cmap="Greens", vmin=vmin_counts, vmax=vmax_counts, cbar=False, ax=axs[1, 0])
             axs[1, 0].set_title('Counts: Background = 0')
             axs[1, 0].set_xlabel('GPA Bin')
             axs[1, 0].xaxis.tick_top()
             axs[1, 0].set_ylabel('S Bin')
-
-            # Counts plot for background = 1
-            sns.heatmap(prob_s_given_gpa_q2_bg1_with_counts['Counts'], annot=True, fmt="d", cmap="Greens", vmin=vmin_counts, vmax=vmax_counts, ax=axs[1, 1])
+            sns.heatmap(prob_s_given_gpa_q2_bg1_with_counts['Counts'], annot=True, fmt="d", cmap="Greens", vmin=vmin_counts, vmax=vmax_counts, cbar=False, ax=axs[1, 1])
             axs[1, 1].set_title('Counts: Background = 1')
             axs[1, 1].set_xlabel('GPA Bin')
             axs[1, 1].xaxis.tick_top()
             axs[1, 1].set_ylabel('S Bin')
 
-            # Probability plot for background = 0
-            sns.heatmap(prob_s_given_gpa_q2_bg0_with_counts['Conditional_Probability'], annot=True, fmt=".2f", cmap="YlGnBu", vmin=vmin, vmax=vmax, ax=axs[2, 0])
+            sns.heatmap(prob_s_given_gpa_q2_bg0_with_counts['Conditional_Probability'], annot=True, fmt=".2f", cmap="YlGnBu", vmin=vmin, vmax=vmax, cbar=False, ax=axs[2, 0])
             axs[2, 0].set_title('PMF P[S | GPA, Q2 > 0, B=0]')
             axs[2, 0].set_xlabel('GPA Bin')
             axs[2, 0].xaxis.tick_top()
             axs[2, 0].set_ylabel('S Bin')
-
-            # Probability plot for background = 1
-            sns.heatmap(prob_s_given_gpa_q2_bg1_with_counts['Conditional_Probability'], annot=True, fmt=".2f", cmap="YlGnBu", vmin=vmin, vmax=vmax, ax=axs[2, 1])
+            sns.heatmap(prob_s_given_gpa_q2_bg1_with_counts['Conditional_Probability'], annot=True, fmt=".2f", cmap="YlGnBu", vmin=vmin, vmax=vmax, cbar=False, ax=axs[2, 1])
             axs[2, 1].set_title('PMF P[S | GPA, Q2 > 0, B=1]')
             axs[2, 1].set_xlabel('GPA Bin')
             axs[2, 1].xaxis.tick_top()
@@ -914,7 +915,7 @@ def POSample(csv_file_path):
             # Common settings for both plots
             for ax, matrix, title in zip(axs, [matrix_Q2_given_gpa_y_didata_bg0, matrix_Q2_given_gpa_y_didata_bg1], ['B=0', 'B=1']):
                 cax = ax.imshow(matrix, cmap='Greys', aspect='auto', vmax=1, vmin=0)
-                ax.set_title(f'P(Q2 > 0 | GPA >= GPA_cutoff, Y) from Local Approximation -- {title}')
+                ax.set_title(f'P(Q2 > 0 | GPA >= GPA_cutoff, Y, B) from Local Approximation -- {title}')
 
                 # Annotating the heatmap
                 for (i, j), val in np.ndenumerate(matrix.values):
@@ -966,7 +967,7 @@ def POSample(csv_file_path):
             # Common settings for both plots
             for ax, matrix, title in zip(axs, [matrix_Q2_given_gpa_y_bg0, matrix_Q2_given_gpa_y_bg1], ['B=0', 'B=1']):
                 cax = ax.imshow(matrix, cmap='Greys', aspect='auto', vmax=1, vmin=0)
-                ax.set_title(f'P(Q2 > 0 | GPA, Y): Bayes Rule and Extrapolation -- {title}')
+                ax.set_title(f'P(Q2 > 0 | GPA, Y, B): Bayes Rule and Extrapolation -- {title}')
                  # Annotating the heatmap
                 for (i, j), val in np.ndenumerate(matrix):
                     if pd.isna(val):
@@ -1179,9 +1180,6 @@ def POSample(csv_file_path):
             plt.close()
 
 
-            # In[33]:
-
-
             def calculate_size_matrix_Q2(data_filtered, bin_edges, bin_edges_GPA):
                 aboveGPA_data_Q2 = data_filtered[data_filtered['gpa'] >= data_filtered['GPA_cutoff']].copy()
                 aboveGPA_data_Q2['Y_bin'] = pd.cut(aboveGPA_data_Q2['Y'], bins=bin_edges, include_lowest=True)
@@ -1251,7 +1249,7 @@ def POSample(csv_file_path):
             # Common settings for both plots
             for ax, matrix, title in zip(axs, [matrix_Q2_given_gpa_y_Size10_bg0, matrix_Q2_given_gpa_y_Size10_bg1], ['B=0', 'B=1']):
                 cax = ax.imshow(matrix, cmap='Greys', aspect='auto', vmax=1, vmin=0)
-                ax.set_title(f'P(Q2 > 0 | GPA, Y) with Size Threshold 10 -- {title}')
+                ax.set_title(f'P(Q2 > 0 | GPA, Y, B) with Size Threshold 10 -- {title}')
                 ax.xaxis.tick_top()
                 ax.xaxis.set_label_position('top')
                 ax.tick_params(top=True, bottom=False, labeltop=True, labelbottom=False)
@@ -1285,9 +1283,6 @@ def POSample(csv_file_path):
             plt.close()
 
 
-            # In[35]:
-
-
             def apply_threshold_and_create_matrix(original_matrix, count_matrix, matrix_Q2_given_gpa_y, threshold=50):
                 matrix_with_threshold = original_matrix.copy()
                 for i in range(count_matrix.shape[0]):
@@ -1305,7 +1300,7 @@ def POSample(csv_file_path):
             # Common settings for both plots
             for ax, matrix, title in zip(axs, [matrix_Q2_given_gpa_y_Size50_bg0, matrix_Q2_given_gpa_y_Size50_bg1], ['B=0', 'B=1']):
                 cax = ax.imshow(matrix, cmap='Greys', aspect='auto', vmax=1, vmin=0)
-                ax.set_title(f'P(Q2 > 0 | GPA, Y) with Size Threshold 50 -- {title}')
+                ax.set_title(f'P(Q2 > 0 | GPA, Y, B) with Size Threshold 50 -- {title}')
                 ax.xaxis.tick_top()
                 ax.xaxis.set_label_position('top')
                 ax.tick_params(top=True, bottom=False, labeltop=True, labelbottom=False)
@@ -1523,7 +1518,7 @@ def POSample(csv_file_path):
                 p_values = eq3_admitted_model.pvalues
 
                 # Format the equation string
-                equation = f"Y = {coefficients_eq3_admitted['const']:.2f} "
+                equation = f"1(S > 0) = {coefficients_eq3_admitted['const']:.2f} "
                 for variable in coefficients_eq3_admitted.index[1:]:
                     equation += f"+ ({coefficients_eq3_admitted[variable]:.2f})*{variable} "
                     equation += f"(p={p_values[variable]:.2g}) "
@@ -1554,7 +1549,7 @@ def POSample(csv_file_path):
                 p_values = eq3_admitted_model.pvalues
 
                 # Format the equation string
-                equation = f"Y = {coefficients_eq3_admitted['const']:.2f} "
+                equation = f"1(S > 0) = {coefficients_eq3_admitted['const']:.2f} "
                 for variable in coefficients_eq3_admitted.index[1:]:
                     equation += f"+ ({coefficients_eq3_admitted[variable]:.2f})*{variable} "
                     equation += f"(p={p_values[variable]:.2g}) "
@@ -1607,7 +1602,7 @@ def POSample(csv_file_path):
             matrix_p_s_gt0_gpa_Q2_bg1 = pd.DataFrame([grouped_data_bg1['Estimated_Probability'].values] * num_y_bins)
 
 
-            # ##### 3.3 $P(Y \mid G P A(\%), Q 2>0)$ from model: matrix_p_y_gpa_q2
+            # ##### 3.3 P(Y | G P A(%), Q 2>0) from model: matrix_p_y_gpa_q2
 
             # ##### 3.4 BR on Model: $P(S>0 \mid G P A(\%), Y, Q 2>0)=\frac{P(Y \mid S>0, G P A(\%), Q 2>0) \times P(S>0 \mid G P A(\%), Q 2>0)}{P(Y \mid G P A(\%), Q 2>0)}$
             # matrix_p_y_gpa_Sgt0_Q2 * matrix_p_s_gt0_gpa_Q2 / matrix_p_y_gpa_q2
@@ -1966,7 +1961,7 @@ def POSample(csv_file_path):
             plt.close()
 
 
-
+            # Coefficients Table:
             # Function to interleave coefficients and standard errors
             def interleave_coeffs_and_se(coeffs, se):
                 interleaved = {}
@@ -1997,10 +1992,315 @@ def POSample(csv_file_path):
 
             excel_file_path = os.path.join(tables_directory, f'Program_{program_id}_coefficients_table.xlsx')
             coefficients_table.to_excel(excel_file_path)
-            print(f"Coefficients Table saved to {excel_file_path}")
 
+
+            ## Efficiency & Equity Trade-off:
+            mean_Y_Q2 = data[data['Admitted_Q2'] == 1]['Y'].mean()
+
+            # Number of individuals admitted in Q2
+            n_admitted_Q2 = data[data['Admitted_Q2'] == 1].shape[0]
+            # Data of individuals not admitted in Q1 and whose GPA percentile is below the cutoff
+            data_not_admitted_Q1_below_cutoff = data[(data['Admitted_Q1'] == 0) & (data['percentile_GPA_applyQ1'] < data['gpa_percentage_cutoff'])]
+            # Calculate the absolute difference from the GPA percentage cutoff
+            data_not_admitted_Q1_below_cutoff['abs_diff_gpa_cutoff'] = abs(data_not_admitted_Q1_below_cutoff['percentile_GPA_applyQ1'] - data['gpa_percentage_cutoff'])
+            # Sort the data by the absolute difference in ascending order
+            sorted_data = data_not_admitted_Q1_below_cutoff.sort_values(by='abs_diff_gpa_cutoff', ascending=True)
+            # Select the top K individuals, where K is the number of individuals admitted in Q2
+            if n_admitted_Q2 <= sorted_data.shape[0]:
+                top_k_data = sorted_data.head(n_admitted_Q2)
+            else:
+                raise ValueError("Not enough data points below the GPA cutoff and not admitted in Q1 to match the size of those admitted in Q2")
+            # Calculate the mean of 'Y_GPA_predicted' for this group
+            mean_Y_counterQ1 = top_k_data['Y_GPA_predicted'].mean()
+
+            efficiency = mean_Y_Q2 - mean_Y_counterQ1
+            equity = eq2_admitted_model.params['background']
+
+            # Count the number of Q2 admitted and Q1 admitted counterfactural
+            count_Q2_admitted = data[(data['Admitted_Q2'] == 1) & (data['program_id'] == program_id)].shape[0]
+
+            # Calculate the percentage of 'background' = 0 among Q2 admitted
+            perc_background_0_Q2 = (data[(data['Admitted_Q2'] == 1) & (data['background'] == 0) & 
+                                     (data['program_id'] == program_id)].shape[0] / count_Q2_admitted) * 100
+
+            # Append the results to the EffiEqui_table
+            EffiEqui_table = EffiEqui_table.append({'Program_ID': program_id, 
+                                                  'Count_Q2_Admitted': count_Q2_admitted, 
+                                                  'Mean_Y_Q2': mean_Y_Q2, 
+                                                  'Mean_Y_CounterQ1': mean_Y_counterQ1, 
+                                                  'Efficiency': efficiency, 
+                                                  'Equity': equity, 
+                                                  'Perc_Background0_Q2': perc_background_0_Q2}, 
+                                                 ignore_index=True)  
+            # Round the non-integer columns to two decimal places before saving or returning the table
+            columns_to_round = ['Mean_Y_Q2', 'Mean_Y_CounterQ1', 'Efficiency', 'Equity', 'Perc_Background0_Q2']
+            EffiEqui_table[columns_to_round] = EffiEqui_table[columns_to_round].round(2)
+
+
+            # Integration over GPA(%):
+
+            # Calculate P(GPA | B = 0)
+            p_gpa_given_b0 = data_bg0['GPA_bin'].value_counts(normalize=True)
+            # Calculate P(GPA | B = 1)
+            p_gpa_given_b1 = data_bg1['GPA_bin'].value_counts(normalize=True)
+
+            def plot_gpa_probabilities(p_gpa_given_b, ax, bin_edges_GPA, title):
+                # Create a bar plot
+                ax.bar(range(len(p_gpa_given_b)), p_gpa_given_b.values, color='grey')
+                # Set the x-tick labels to show GPA bins as percentage ranges
+                x_bin_labels = [f'{100*edge:.0f}%-{100*bin_edges_GPA[i+1]:.0f}%' for i, edge in enumerate(bin_edges_GPA[:-1])]
+                ax.set_xticks(range(len(x_bin_labels)))
+                ax.set_xticklabels(x_bin_labels, rotation=45)
+                # Set labels and title
+                ax.set_ylabel('P[GPA | B]')
+                ax.set_title(title)
+                # Add grid lines for better readability
+                ax.grid(True, linestyle='--', linewidth=0.7, alpha=0.7)
+
+            # Create subplots
+            fig, axs = plt.subplots(1, 2, figsize=(15, 5))
+            # Plot for background = 0
+            plot_gpa_probabilities(p_gpa_given_b0, axs[0], bin_edges_GPA, 'P[GPA | B=0]')
+            # Plot for background = 1
+            plot_gpa_probabilities(p_gpa_given_b1, axs[1], bin_edges_GPA, 'P[GPA | B=1]')
+
+            plt.tight_layout()
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P_GPA_given_B.png'))
+            plt.close()
+
+
+            # Convert DataFrame to numpy array for easier calculations
+            array_p_y_gpa_bg0 = matrix_p_y_gpa_bg0.to_numpy()
+            array_p_y_gpa_bg1 = matrix_p_y_gpa_bg1.to_numpy()
+            # Reverse the p_gpa_given_b1 Series to align with the matrix columns
+            p_gpa_given_b1_aligned = p_gpa_given_b1.iloc[::-1].reindex(matrix_p_y_gpa_bg1.columns).fillna(0).values
+            # p_gpa_given_b0 does not need reversing as it is already in ascending order
+            p_gpa_given_b0_aligned = p_gpa_given_b0.reindex(matrix_p_y_gpa_bg0.columns).fillna(0).to_numpy()
+
+            # Calculate P(Y | B)
+            p_y_given_b0 = np.sum(array_p_y_gpa_bg0 * p_gpa_given_b0_aligned, axis=1)
+            p_y_given_b1 = np.sum(array_p_y_gpa_bg1 * p_gpa_given_b1_aligned, axis=1)
+
+            # Create the x-axis labels for Y bins
+            y_bins = range(len(p_y_given_b0))  # Adjust this if Y_bin has specific labels or replace with a list of Y bin labels
+            # Create subplots
+            fig, axs = plt.subplots(1, 2, figsize=(15, 5))
+            # Plot for background = 0
+            axs[0].bar(y_bins, p_y_given_b0, color='grey')
+            axs[0].set_title('P[Y | B=0]')
+            axs[0].set_xlabel('Y Bin')
+            axs[0].set_ylabel('Probability')
+            axs[0].set_xticks(y_bins)  # Set the x-ticks to the Y bin indices
+            axs[0].grid(True, linestyle='--', linewidth=0.7, alpha=0.7)
+            # Plot for background = 1
+            axs[1].bar(y_bins, p_y_given_b1, color='grey')
+            axs[1].set_title('P[Y | B=1]')
+            axs[1].set_xlabel('Y Bin')
+            axs[1].set_ylabel('Probability')
+            axs[1].set_xticks(y_bins)  # Set the x-ticks to the Y bin indices
+            axs[1].grid(True, linestyle='--', linewidth=0.7, alpha=0.7)
+            plt.tight_layout()
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P_Y_given_B.png'))
+            plt.close()
+
+
+            # Calculate P(GPA | Y, B) using Bayes' rule
+            p_gpa_given_y_b0 = (array_p_y_gpa_bg0 * p_gpa_given_b0_aligned) / p_y_given_b0[:, np.newaxis]
+            p_gpa_given_y_b1 = (array_p_y_gpa_bg1 * p_gpa_given_b1_aligned) / p_y_given_b1[:, np.newaxis]
+
+            num_Y_bins = len(bin_edges) - 1
+            num_GPA_bins = len(bin_edges_GPA) - 1
+            p_gpa_given_y_b0_reshaped = p_gpa_given_y_b0.reshape(num_Y_bins, num_GPA_bins)
+            p_gpa_given_y_b1_reshaped = p_gpa_given_y_b1.reshape(num_Y_bins, num_GPA_bins)
+            # Find the min and max values across both backgrounds
+            vmin = min(p_gpa_given_y_b0_reshaped.min(), p_gpa_given_y_b1_reshaped.min())
+            vmax = max(p_gpa_given_y_b0_reshaped.max(), p_gpa_given_y_b1_reshaped.max())
+
+            def plot_heatmap(matrix, ax, title, bin_edges, bin_edges_GPA):
+                cax = ax.imshow(matrix, cmap='Greys', aspect='auto', vmax=vmax+0.02, vmin=vmin)
+                ax.set_title(title)
+                ax.xaxis.tick_top()
+                ax.xaxis.set_label_position('top')
+                ax.tick_params(top=True, bottom=False, labeltop=True, labelbottom=False)
+
+                for (i, j), val in np.ndenumerate(matrix):
+                    if pd.isna(val):
+                        ax.text(j, i, 'NaN', ha='center', va='center', color='red', fontsize=8)
+                    elif val == 0:
+                        ax.text(j, i, '0', ha='center', va='center', color='blue', fontsize=8)
+                    elif 0 < val <= 1:
+                        ax.text(j, i, f'{val:.2f}', ha='center', va='center', color='black', fontsize=8)
+                    elif val > 1:
+                        ax.text(j, i, f'{val:.2f}', ha='center', va='center', color='white', fontsize=8)
+
+                x_bin_labels = [f'{100*edge:.0f}%' for edge in bin_edges_GPA]
+                x_ticks = np.arange(-0.5, len(x_bin_labels) - 0.5, 1)
+                ax.set_xticks(x_ticks)
+                ax.set_xticklabels(x_bin_labels, rotation=45)
+
+                y_bin_labels = [f'{edge:.2f}' for edge in bin_edges]
+                y_ticks = np.arange(-0.5, len(y_bin_labels) - 0.5, 1)
+                ax.set_yticks(y_ticks)
+                ax.set_yticklabels(y_bin_labels)
+                ax.grid(True, which='both', linestyle='--', linewidth=0.5, color='k')
+
+                ax.set_xlabel('GPA(%) Bin')
+                ax.set_ylabel('Y Bin')
+
+            fig, axs = plt.subplots(1, 2, figsize=(20, 8))
+            plot_heatmap(p_gpa_given_y_b0_reshaped, axs[0], 'P(GPA | Y, B=0)', bin_edges, bin_edges_GPA)
+            plot_heatmap(p_gpa_given_y_b1_reshaped, axs[1], 'P(GPA | Y, B=1)', bin_edges, bin_edges_GPA)
+
+            plt.tight_layout()
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P_GPA_given_Y_B.png'))
+            plt.close()
+
+
+
+            # P(Q2 > 0 | Y, B):
+            # Convert the computed matrices to numpy arrays
+            array_Q2_given_gpa_y_bg0 = matrix_Q2_given_gpa_y_bg0.to_numpy()
+            array_Q2_given_gpa_y_bg1 = matrix_Q2_given_gpa_y_bg1.to_numpy()
+            # Initialize arrays to store the results for P(Q2 > 0 | Y, B)
+            p_q2_given_y_b0 = np.zeros(array_Q2_given_gpa_y_bg0.shape[0])
+            p_q2_given_y_b1 = np.zeros(array_Q2_given_gpa_y_bg1.shape[0])
+            # Integration (weighted sum) across all GPA levels
+            for i in range(array_Q2_given_gpa_y_bg0.shape[0]): # Loop over Y bins
+                p_q2_given_y_b0[i] = np.sum(array_Q2_given_gpa_y_bg0[i, :] * p_gpa_given_y_b0[i, :])
+                p_q2_given_y_b1[i] = np.sum(array_Q2_given_gpa_y_bg1[i, :] * p_gpa_given_y_b1[i, :])
+
+            # P(S > 0, Q2 > 0 | Y, B):
+            # Convert these matrices to numpy arrays
+            array_Sgt0_Q2_given_gpa_y_bg0 = matrix_Sgt0_Q2_given_gpa_y_Size10_bg0.to_numpy()
+            array_Sgt0_Q2_given_gpa_y_bg1 = matrix_Sgt0_Q2_given_gpa_y_Size10_bg1.to_numpy()
+            # Initialize arrays to store the results for P(S > 0, Q2 > 0 | Y, B)
+            p_Sgt0_Q2_given_y_b0 = np.zeros(array_Sgt0_Q2_given_gpa_y_bg0.shape[0])
+            p_Sgt0_Q2_given_y_b1 = np.zeros(array_Sgt0_Q2_given_gpa_y_bg1.shape[0])
+            # Integration (weighted sum) across all GPA levels
+            for i in range(array_Sgt0_Q2_given_gpa_y_bg0.shape[0]): # Loop over Y bins
+                p_Sgt0_Q2_given_y_b0[i] = np.sum(array_Sgt0_Q2_given_gpa_y_bg0[i, :] * p_gpa_given_y_b0[i, :])
+                p_Sgt0_Q2_given_y_b1[i] = np.sum(array_Sgt0_Q2_given_gpa_y_bg1[i, :] * p_gpa_given_y_b1[i, :])
+
+            # P(S>0 | Y, Q2>0, B):
+            p_Sgt0_given_Y_Q2_b0 = p_Sgt0_Q2_given_y_b0 / p_q2_given_y_b0
+            p_Sgt0_given_Y_Q2_b1 = p_Sgt0_Q2_given_y_b1 / p_q2_given_y_b1
+
+            y_bins = range(len(p_q2_given_y_b0))
+            probabilities_table = pd.DataFrame({
+                'Y_bin': y_bins,
+                'P_Q2_Given_Y_B0': p_q2_given_y_b0,
+                'P_Q2_Given_Y_B1': p_q2_given_y_b1,
+                'P_Sgt0_Q2_Given_Y_B0': p_Sgt0_Q2_given_y_b0,
+                'P_Sgt0_Q2_Given_Y_B1': p_Sgt0_Q2_given_y_b1,
+                'P_Sgt0_given_Y_Q2_B0': p_Sgt0_given_Y_Q2_b0,
+                'P_Sgt0_given_Y_Q2_B1': p_Sgt0_given_Y_Q2_b1
+            })
+            probabilities_table = probabilities_table.round(2)
+            probabilities_table.to_csv(os.path.join(tables_directory, f'Program_{program_id}_Probs_IntegrateGPA.csv'), index=False)
+
+            ## P(Y | Q2>0, B) and P(S>0, Q2>0 | B):
+            # P(Q2>0 | B) for background = 0
+            prob_Q2_greater_0_given_bg0 = data_bg0[data_bg0['Q2'] > 0].shape[0] / data_bg0.shape[0]
+            # P(Q2>0 | B) for background = 1
+            prob_Q2_greater_0_given_bg1 = data_bg1[data_bg1['Q2'] > 0].shape[0] / data_bg1.shape[0]
+            # P(S>0, Q2>0 | B) for background = 0
+            prob_S_greater_0_and_Q2_greater_0_given_bg0 = data_bg0[(data_bg0['S'] > 0) & (data_bg0['Q2'] > 0)].shape[0] / data_bg0.shape[0]
+            # P(S>0, Q2>0 | B) for background = 1
+            prob_S_greater_0_and_Q2_greater_0_given_bg1 = data_bg1[(data_bg1['S'] > 0) & (data_bg1['Q2'] > 0)].shape[0] / data_bg1.shape[0]
+            # Print the results
+            print("P(Q2>0 | B=0): {:.2f}".format(prob_Q2_greater_0_given_bg0))
+            print("P(Q2>0 | B=1): {:.2f}".format(prob_Q2_greater_0_given_bg1))
+            print("P(S>0, Q2>0 | B=0): {:.2f}".format(prob_S_greater_0_and_Q2_greater_0_given_bg0))
+            print("P(S>0, Q2>0 | B=1): {:.2f}".format(prob_S_greater_0_and_Q2_greater_0_given_bg1))
+
+            # P(Y | Q2>0, B) for each background
+            # Initialize arrays to store the results
+            p_y_given_q2_greater_0_b0 = np.zeros_like(p_q2_given_y_b0)
+            p_y_given_q2_greater_0_b1 = np.zeros_like(p_q2_given_y_b1)
+            # Apply Bayes' rule
+            for i in range(len(p_y_given_q2_greater_0_b0)):
+                p_y_given_q2_greater_0_b0[i] = (p_q2_given_y_b0[i] * p_y_given_b0[i]) / prob_Q2_greater_0_given_bg0
+                p_y_given_q2_greater_0_b1[i] = (p_q2_given_y_b1[i] * p_y_given_b1[i]) / prob_Q2_greater_0_given_bg0
+            fig, axs = plt.subplots(1, 2, figsize=(15, 5))
+            # Plot for background = 0
+            axs[0].bar(y_bins, p_y_given_q2_greater_0_b0, color='grey')
+            axs[0].set_title('P[Y | Q2>0, B=0]')
+            axs[0].set_xlabel('Y Bin')
+            axs[0].set_ylabel('Probability')
+            axs[0].set_xticks(y_bins)  # Set the x-ticks to the Y bin indices
+            axs[0].grid(True, linestyle='--', linewidth=0.7, alpha=0.7)
+            # Plot for background = 1
+            axs[1].bar(y_bins, p_y_given_q2_greater_0_b1, color='grey')
+            axs[1].set_title('P[Y | Q2>0, B=1]')
+            axs[1].set_xlabel('Y Bin')
+            axs[1].set_ylabel('Probability')
+            axs[1].set_xticks(y_bins)  # Set the x-ticks to the Y bin indices
+            axs[1].grid(True, linestyle='--', linewidth=0.7, alpha=0.7)
+            plt.tight_layout()
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P_Y_given_Q2_B.png'))
+            plt.close()
+
+            # P(S>0, Q2>0 | B) for each background
+            # Assuming you have data_bg0 and data_bg1 as your datasets
+            p_Sgt0_Q2_given_b0 = np.mean((data_bg0['S'] > 0) & (data_bg0['Q2'] > 0))
+            p_Sgt0_Q2_given_b1 = np.mean((data_bg1['S'] > 0) & (data_bg1['Q2'] > 0))
+            # P(Y | S>0, Q2>0, B) for each background
+            # Initialize arrays to store the results
+            p_y_given_Sgt0_Q2_greater_0_b0 = np.zeros_like(p_Sgt0_Q2_given_y_b0)
+            p_y_given_Sgt0_Q2_greater_0_b1 = np.zeros_like(p_Sgt0_Q2_given_y_b1)
+            # Apply Bayes' rule
+            for i in range(len(p_y_given_Sgt0_Q2_greater_0_b0)):
+                p_y_given_Sgt0_Q2_greater_0_b0[i] = (p_Sgt0_Q2_given_y_b0[i] * p_y_given_b0[i]) / p_Sgt0_Q2_given_b0
+                p_y_given_Sgt0_Q2_greater_0_b1[i] = (p_Sgt0_Q2_given_y_b1[i] * p_y_given_b1[i]) / p_Sgt0_Q2_given_b1
+            fig, axs = plt.subplots(1, 2, figsize=(15, 5))
+            # Plot for background = 0
+            axs[0].bar(y_bins, p_y_given_Sgt0_Q2_greater_0_b0, color='grey')
+            axs[0].set_title('P[Y | S>0, Q2>0, B=0]')
+            axs[0].set_xlabel('Y Bin')
+            axs[0].set_ylabel('Probability')
+            axs[0].set_xticks(y_bins)  # Set the x-ticks to the Y bin indices
+            axs[0].grid(True, linestyle='--', linewidth=0.7, alpha=0.7)
+            # Plot for background = 1
+            axs[1].bar(y_bins, p_y_given_Sgt0_Q2_greater_0_b1, color='grey')
+            axs[1].set_title('P[Y | S>0, Q2>0, B=1]')
+            axs[1].set_xlabel('Y Bin')
+            axs[1].set_ylabel('Probability')
+            axs[1].set_xticks(y_bins)  # Set the x-ticks to the Y bin indices
+            axs[1].grid(True, linestyle='--', linewidth=0.7, alpha=0.7)
+            plt.tight_layout()
+            plt.savefig(os.path.join(figures_directory, f'Program_{program_id}_P_Y_given_Q2_Sgt0_B.png'))
+            plt.close()
+
+            print(f"Tables saved to {excel_file_path}")
             print(f"Figures saved to {excel_file_path}")
-            
+
+        # Save the EffiEqui_table to a CSV file
+        EffiEqui_table.to_csv(os.path.join(tables_directory, 'EffiEqui_table.csv'), index=False)
+
+        # Create EffiEqui figure:
+        plt.figure(figsize=(8, 8))
+        # Scatter plot for all programs
+        plt.scatter(EffiEqui_table['Equity'], EffiEqui_table['Efficiency'], color='blue')
+        # Add a horizontal line at y=0
+        plt.axhline(y=0, color='black', linestyle='--')
+        # Add a vertical line at x=0
+        plt.axvline(x=0, color='black', linestyle='--')
+        # Add a 45-degree line
+        x = np.linspace(min(EffiEqui_table['Equity']) - 1, max(EffiEqui_table['Equity']) + 1, 100) # Adjust range as needed
+        y = x
+        plt.plot(x, y, color='grey', linestyle='--', label='45-degree line')
+        # Set labels and title
+        plt.xlabel('Equity')
+        plt.ylabel('Efficiency')
+        plt.title('Efficiency & Equity Trade-off')
+        # Add a legend
+        plt.legend()
+        # Adjust layout and save the figure
+        plt.tight_layout()
+        plt.savefig(os.path.join(figures_directory, f'Effi_Equi_Tradeoff_All.png'))
+        plt.close()
+
+
     # Reset stdout to its original state
     sys.stdout = original_stdout
     print(f"All outputs have been saved to {output_file_path}")
