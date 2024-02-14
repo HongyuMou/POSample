@@ -890,7 +890,7 @@ def POSample(csv_file_path):
 
                 grouped_data = aboveGPA_data.groupby(['GPA_bin', 'Y_bin_index'])
                 total_counts = grouped_data.size()
-                count_Q2_gt_0 = aboveGPA_data[aboveGPA_data['Q2'] > 0].groupby(['GPA_bin', 'Y_bin_index']).size()
+                count_Q2_gt_0 = aboveGPA_data[aboveGPA_data['Applied_Q2'] == 1].groupby(['GPA_bin', 'Y_bin_index']).size()
                 prob_Q2_gt_0_given_GPA_Y = count_Q2_gt_0.div(total_counts)
 
                 pivot_results_Q2 = prob_Q2_gt_0_given_GPA_Y.reset_index().pivot_table(
@@ -947,6 +947,10 @@ def POSample(csv_file_path):
             # ### Model predicted version
 
             def compute_matrix(matrix_p_y_gpa_q2, matrix_p_y_gpa, matrix_p_q2_gpa):
+                # Ensure all matrices have the same shape
+                if not (matrix_p_y_gpa_q2.shape == matrix_p_y_gpa.shape == matrix_p_q2_gpa.shape):
+                    raise ValueError("All input matrices must have the same shape.")
+        
                 computed_matrix = pd.DataFrame(np.zeros(matrix_p_y_gpa.shape))
 
                 for i in range(computed_matrix.shape[0]):
@@ -1421,7 +1425,7 @@ def POSample(csv_file_path):
 
             def calculate_probabilities(data, bin_edges, sigma_2_global):
                 # Filter data where S > 0 and Q2 > 0
-                data_S_Q2 = data[(data['S'] > 0) & (data['Q2'] > 0)]
+                data_S_Q2 = data[(data['S'] > 0) & (data['Applied_Q2'] == 1)]
                 gpa_bins = data_S_Q2['GPA_bin'].dropna().unique()
 
                 results = pd.DataFrame(columns=['GPA_bin', 'Y_bin_index', 'Y_bin', 'P_Y_given_GPA_S_Q2'])
@@ -2200,13 +2204,13 @@ def POSample(csv_file_path):
 
             ## P(Y | Q2>0, B) and P(S>0, Q2>0 | B):
             # P(Q2>0 | B) for background = 0
-            prob_Q2_greater_0_given_bg0 = data_bg0[data_bg0['Q2'] > 0].shape[0] / data_bg0.shape[0]
+            prob_Q2_greater_0_given_bg0 = data_bg0[data_bg0['Applied_Q2'] == 1].shape[0] / data_bg0.shape[0]
             # P(Q2>0 | B) for background = 1
-            prob_Q2_greater_0_given_bg1 = data_bg1[data_bg1['Q2'] > 0].shape[0] / data_bg1.shape[0]
+            prob_Q2_greater_0_given_bg1 = data_bg1[data_bg1['Applied_Q2'] == 1].shape[0] / data_bg1.shape[0]
             # P(S>0, Q2>0 | B) for background = 0
-            prob_S_greater_0_and_Q2_greater_0_given_bg0 = data_bg0[(data_bg0['S'] > 0) & (data_bg0['Q2'] > 0)].shape[0] / data_bg0.shape[0]
+            prob_S_greater_0_and_Q2_greater_0_given_bg0 = data_bg0[(data_bg0['S'] > 0) & (data_bg0['Applied_Q2'] == 1)].shape[0] / data_bg0.shape[0]
             # P(S>0, Q2>0 | B) for background = 1
-            prob_S_greater_0_and_Q2_greater_0_given_bg1 = data_bg1[(data_bg1['S'] > 0) & (data_bg1['Q2'] > 0)].shape[0] / data_bg1.shape[0]
+            prob_S_greater_0_and_Q2_greater_0_given_bg1 = data_bg1[(data_bg1['S'] > 0) & (data_bg1['Applied_Q2'] == 1)].shape[0] / data_bg1.shape[0]
             # Print the results
             print("P(Q2>0 | B=0): {:.2f}".format(prob_Q2_greater_0_given_bg0))
             print("P(Q2>0 | B=1): {:.2f}".format(prob_Q2_greater_0_given_bg1))
@@ -2242,8 +2246,8 @@ def POSample(csv_file_path):
 
             # P(S>0, Q2>0 | B) for each background
             # Assuming you have data_bg0 and data_bg1 as your datasets
-            p_Sgt0_Q2_given_b0 = np.mean((data_bg0['S'] > 0) & (data_bg0['Q2'] > 0))
-            p_Sgt0_Q2_given_b1 = np.mean((data_bg1['S'] > 0) & (data_bg1['Q2'] > 0))
+            p_Sgt0_Q2_given_b0 = np.mean((data_bg0['S'] > 0) & (data_bg0['Applied_Q2'] == 1))
+            p_Sgt0_Q2_given_b1 = np.mean((data_bg1['S'] > 0) & (data_bg1['Applied_Q2'] == 1))
             # P(Y | S>0, Q2>0, B) for each background
             # Initialize arrays to store the results
             p_y_given_Sgt0_Q2_greater_0_b0 = np.zeros_like(p_Sgt0_Q2_given_y_b0)
